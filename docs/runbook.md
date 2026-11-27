@@ -1,6 +1,6 @@
 # Runbook
 
-> Documento vivo: cada fase acrescenta seções. Última atualização: Fase 1.
+> Documento vivo: cada fase acrescenta seções. Última atualização: Fase 3.
 
 ## Ambientes
 
@@ -36,3 +36,34 @@ preview são grátis. Por isso juntamos mudanças e publicamos em lotes.
 
 Lista completa e explicada em `.env.example`. Para mudar na Netlify: _Site configuration →
 Environment variables_. Depois de mudar, faça um novo deploy (variáveis só valem em builds novos).
+
+## Banco de dados
+
+- **Migrações:** `npm run db:migrate` (usa `DATABASE_MIGRATION_URL`). Sempre **retrocompatíveis**:
+  primeiro adiciona-se (coluna, tabela), o código novo vai ao ar e só num deploy seguinte se
+  remove o que ficou sem uso.
+- **Nova migração:** altere `src/server/db/schema.ts` e rode `npm run db:generate`. O que o
+  Drizzle não expressa (constraints, triggers) vai num arquivo `--custom`
+  (`npx drizzle-kit generate --custom --name nome`). A CI roda `drizzle-kit check` e aplica tudo
+  num banco vazio.
+- **Seed:** `npm run db:seed` cria os serviços (seguro em produção). `-- --demo` cria agendamentos
+  fictícios e é recusado em produção.
+- **Pausar agendamentos** (emergência): `update schedule_settings set bookings_paused = true;`.
+  Na Fase 5 vira um botão no painel.
+- **Restauração:** o Neon Free guarda 6 h de histórico (restore instantâneo pelo console). O dump
+  diário cifrado entra na Fase 6.
+
+## Testes de banco na sua máquina (opcional)
+
+Precisa de Docker:
+
+```bash
+docker run -d --name lsr-pg -e POSTGRES_PASSWORD=postgres -p 5432:5432 postgres:17
+```
+
+```bash
+docker exec lsr-pg psql -U postgres -c "create database lsr_test"
+```
+
+Depois, com `DATABASE_URL_TEST=postgres://postgres:postgres@localhost:5432/lsr_test` no
+`.env.local` (ou no terminal), rode `npm run test:db`. Sem Docker, a CI roda esses testes em cada PR.

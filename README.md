@@ -141,15 +141,22 @@ src/
 │   └── site/             seções do site público (header, hero, portfólio…)
 ├── content/              textos e dados do site (placeholders do design marcados)
 ├── env/                  esquema e validação das variáveis de ambiente
+├── server/
+│   ├── db/               esquema Drizzle e conexão
+│   ├── scheduling/       disponibilidade, deslocamento, fuso (regras puras)
+│   ├── booking/          criação de agendamentos (transação, trava, idempotência)
+│   └── crypto/           cifragem de campos sensíveis
 ├── lib/
 │   ├── security/         cabeçalhos HTTP e Content Security Policy
 │   └── observability/    logger estruturado sem dados pessoais
 └── proxy.ts              CSP com nonce nas áreas dinâmicas
 tests/
 ├── unit/                 Vitest
+├── db/                   Vitest + Postgres (regras, concorrência)
 └── e2e/                  Playwright + axe
 docs/
 ├── fase-0-descoberta.md  descoberta, arquitetura, modelo de dados
+├── architecture.md       diagramas: contexto, dados, algoritmo
 ├── adr/                  decisões de arquitetura
 └── runbook.md            deploy, rollback, operação
 ```
