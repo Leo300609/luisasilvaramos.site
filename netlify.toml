@@ -1,5 +1,10 @@
-# Netlify: Next.js is detected automatically (OpenNext-based runtime).
+# Netlify + Next.js. The Next.js runtime is declared explicitly: the site was
+# created before the app existed, so Netlify did not auto-enable it and served
+# the build as plain static files (404 everywhere).
 # Docs: docs/runbook.md → "Deploy".
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
 
 [build]
   command = "npm run build"
