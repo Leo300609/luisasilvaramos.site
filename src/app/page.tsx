@@ -1,24 +1,43 @@
-import { StatusPage } from '@/components/status-page'
-import { whatsappLink } from '@/lib/contact'
+import type { Metadata } from 'next'
 
-/**
- * Temporary home page (Phase 1). The real site from the design arrives in Phase 2.
- */
+import { Contact } from '@/components/site/contact'
+import { SiteFooter, WhatsAppFloat } from '@/components/site/footer'
+import { SiteHeader } from '@/components/site/header'
+import { Portfolio } from '@/components/site/portfolio'
+import { About, FinalCta, Hero, Process, Services } from '@/components/site/sections'
+import { Testimonials } from '@/components/site/testimonials'
+import { env } from '@/env/server'
+import { businessJsonLd, serializeJsonLd } from '@/lib/seo'
+
+import './site.css'
+
+export const metadata: Metadata = {
+  alternates: { canonical: '/' },
+}
+
 export default function HomePage() {
   return (
-    <StatusPage
-      kicker="Luísa Silva Ramos · Maquiadora profissional"
-      title={
-        <>
-          Realce a sua <em className="text-gold-text italic">beleza</em>
-        </>
-      }
-      description="Nosso site está sendo preparado com carinho. Enquanto isso, fale com a Luísa pelo WhatsApp para consultar datas e valores."
-      action={{
-        href: whatsappLink('Olá, Luísa! Vim pelo site e gostaria de saber sobre datas e valores.'),
-        label: 'Chamar no WhatsApp',
-        external: true,
-      }}
-    />
+    <div className="lsr">
+      <script
+        type="application/ld+json"
+        // JSON-LD is built from our own constants and escaped by serializeJsonLd.
+        dangerouslySetInnerHTML={{
+          __html: serializeJsonLd(businessJsonLd(env.NEXT_PUBLIC_SITE_URL)),
+        }}
+      />
+      <SiteHeader />
+      <main id="conteudo">
+        <Hero />
+        <About />
+        <Services />
+        <Portfolio />
+        <Process />
+        <Testimonials />
+        <FinalCta />
+        <Contact />
+      </main>
+      <SiteFooter />
+      <WhatsAppFloat />
+    </div>
   )
 }
