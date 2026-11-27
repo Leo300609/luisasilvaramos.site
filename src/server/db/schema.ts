@@ -138,6 +138,8 @@ export const scheduleSettings = pgTable(
       .default('1.30'),
     /** Luísa's departure address, encrypted (never shown publicly). */
     baseAddressEnc: text('base_address_enc'),
+    /** Coordinates of the departure address, encrypted JSON {lat,lng} (reveals her home). */
+    baseLocationEnc: text('base_location_enc'),
     bookingsPaused: boolean('bookings_paused').notNull().default(false),
     updatedAt: timestamps.updatedAt,
   },
@@ -247,6 +249,26 @@ export const bookings = pgTable(
     index('bookings_customer_idx').on(t.customerId),
     index('bookings_status_idx').on(t.status),
   ],
+)
+
+/**
+ * Secret links that let a client see and manage her own booking ("Minha agenda").
+ * Only the SHA-256 of the token is stored (docs/adr/0008-tokens-cliente.md).
+ */
+export const bookingTokens = pgTable(
+  'booking_tokens',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    bookingId: uuid('booking_id')
+      .notNull()
+      .references(() => bookings.id),
+    tokenHash: text('token_hash').notNull().unique(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    revokedAt: timestamp('revoked_at', { withTimezone: true }),
+    lastUsedAt: timestamp('last_used_at', { withTimezone: true }),
+    createdAt: timestamps.createdAt,
+  },
+  (t) => [index('booking_tokens_booking_idx').on(t.bookingId)],
 )
 
 /** Timeline shown in the admin drawer ("Histórico"). Append-only. */

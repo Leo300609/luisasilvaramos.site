@@ -15,6 +15,13 @@
       "when": 1795801946892,
       "tag": "0001_constraints",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1795803507630,
+      "tag": "0002_booking_tokens",
+      "breakpoints": true
     }
   ]
 }
