@@ -30,7 +30,40 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
       - run: npm run format:check
+      - run: npm test
+
+  database:
+    name: Banco de dados (migrações, regras e concorrência)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: lsr_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL_TEST: postgres://postgres:postgres@localhost:5432/lsr_test
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      # Unit + database tests together, with coverage.
       - run: npm run test:coverage
+      # The migrations must apply cleanly on an empty database, then the seed must run.
+      - run: PGPASSWORD=postgres psql -h localhost -U postgres -c 'create database lsr_seed'
+      - run: npm run db:migrate && npm run db:seed
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/lsr_seed
+          DATABASE_MIGRATION_URL: postgres://postgres:postgres@localhost:5432/lsr_seed
+      - name: Migrations are in sync with the schema
+        run: npx drizzle-kit check
 
   build-e2e:
     name: Build e testes E2E

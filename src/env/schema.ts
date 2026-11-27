@@ -30,6 +30,23 @@ export const serverEnvSchema = z
     LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
     /** Git commit of the running build (Netlify sets COMMIT_REF). */
     COMMIT_REF: z.string().min(1).optional(),
+    /**
+     * Postgres for the app (role without DDL). Optional so static pages build without
+     * a database; code that needs it fails with a clear message (src/server/db/client.ts).
+     */
+    DATABASE_URL: z
+      .string()
+      .regex(/^postgres(ql)?:\/\//, 'must be a postgres:// URL')
+      .optional(),
+    /** Field-encryption keys: "v1:<base64 32 bytes>,v2:…" (see src/server/crypto/fields.ts). */
+    ENC_KEYS: z
+      .string()
+      .regex(/^v\d+:[A-Za-z0-9+/=]{43,44}(,v\d+:[A-Za-z0-9+/=]{43,44})*$/, 'invalid format')
+      .optional(),
+    ENC_ACTIVE_KEY: z
+      .string()
+      .regex(/^v\d+$/)
+      .optional(),
   })
   .superRefine((env, ctx) => {
     if (env.APP_ENV === 'production' && !env.NEXT_PUBLIC_SITE_URL.startsWith('https://')) {
@@ -37,6 +54,16 @@ export const serverEnvSchema = z
         code: 'custom',
         path: ['NEXT_PUBLIC_SITE_URL'],
         message: 'must use https in production',
+      })
+    }
+    if (
+      env.ENC_ACTIVE_KEY &&
+      !env.ENC_KEYS?.split(',').some((k) => k.startsWith(`${env.ENC_ACTIVE_KEY}:`))
+    ) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['ENC_ACTIVE_KEY'],
+        message: 'must name one of the keys in ENC_KEYS',
       })
     }
     if (env.SITE_INDEXABLE && env.APP_ENV !== 'production') {

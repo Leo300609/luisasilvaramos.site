@@ -18,4 +18,7 @@ export const env = parseServerEnv({
   CONTEXT: process.env.CONTEXT,
   URL: process.env.URL,
   DEPLOY_PRIME_URL: process.env.DEPLOY_PRIME_URL,
+  DATABASE_URL: process.env.DATABASE_URL,
+  ENC_KEYS: process.env.ENC_KEYS,
+  ENC_ACTIVE_KEY: process.env.ENC_ACTIVE_KEY,
 })

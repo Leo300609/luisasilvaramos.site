@@ -11,10 +11,17 @@ updates:
     groups:
       minor-and-patch:
         update-types: [minor, patch]
-    labels: [dependencies]
+    ignore:
+      # Incompatible majors (Nov 2026): Next 16 does not support TypeScript 7 yet,
+      # and Vitest 5 broke the test runner. Migrated manually when ready.
+      - dependency-name: typescript
+        update-types: [version-update:semver-major]
+      - dependency-name: vitest
+        update-types: [version-update:semver-major]
+      - dependency-name: '@vitest/*'
+        update-types: [version-update:semver-major]
 
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: monthly
-    labels: [dependencies]

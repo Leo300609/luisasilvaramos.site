@@ -1,6 +1,6 @@
 # ADR 0003 · PostgreSQL (Neon) + Drizzle ORM
 
-Status: Proposto · Data: 2026-11-27
+Status: **Aceito** (Fase 3) · Data: 2026-11-27
 
 ## Contexto
 
@@ -15,7 +15,9 @@ A regra anti-conflito precisa de `EXCLUDE USING gist` sobre `tstzrange` (extens�
 ## Decisão
 
 - Neon Postgres no plano Free.
-- Drizzle + driver `@neondatabase/serverless` (Pool via WebSocket, que suporta transações).
+- Drizzle + **`pg` (node-postgres)** via o _pooler_ do Neon. As funções da Netlify são Node (TCP disponível), e o mesmo driver roda nos testes contra um Postgres local. O driver `@neondatabase/serverless` só seria necessário em runtime Edge.
+- Região **aws-us-east-2**, a mesma das funções da Netlify (ver `docs/architecture.md`).
+- A organização Neon criada pela integração com a Vercel não permite criar projetos. O projeto fica numa **organização própria**, "Luísa Silva Ramos".
 - Constraint, trigger e permissões em migrations SQL revisadas.
 - Dois papéis: `app_rw` (sem DDL, sem UPDATE/DELETE no `audit_log`) e `migrator`.
 - Branch do Neon por preview.

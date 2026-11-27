@@ -1,6 +1,6 @@
 # ADR 0009 · Cifragem de campos sensíveis
 
-Status: Proposto · Data: 2026-11-27
+Status: **Aceito** (Fase 3) · Data: 2026-11-27
 
 ## Decisão
 
@@ -9,6 +9,8 @@ Os campos endereço, complemento, observações, alergias, notas internas e segr
 - Chaves em `ENC_KEYS` (várias versões) e `ENC_ACTIVE_KEY`.
 - Um job regrava com a chave nova, o que permite rotação.
 - A busca do admin é só por nome e código, que não são cifrados.
+
+Cada valor é amarrado ao seu campo por AAD (`bookings.address` etc.): um valor cifrado copiado para outra coluna não decifra.
 
 ## Consequências
 
