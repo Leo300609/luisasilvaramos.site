@@ -21,4 +21,5 @@ export const env = parseServerEnv({
   DATABASE_URL: process.env.DATABASE_URL,
   ENC_KEYS: process.env.ENC_KEYS,
   ENC_ACTIVE_KEY: process.env.ENC_ACTIVE_KEY,
+  BOOKING_SIGNING_SECRET: process.env.BOOKING_SIGNING_SECRET,
 })
