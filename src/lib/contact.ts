@@ -6,8 +6,13 @@ export const CONTACT = {
   /** E.164 without "+", as wa.me expects. */
   whatsappE164: '5511930546322',
   whatsappDisplay: '(11) 93054-6322',
+  email: 'luisa.silva.ramos@gmail.com',
   instagramHandle: undefined as string | undefined,
 } as const
+
+export function instagramUrl(handle: string): string {
+  return `https://instagram.com/${encodeURIComponent(handle.replace(/^@/, ''))}`
+}
 
 /**
  * Builds a wa.me link with a pre-filled message. The text is percent-encoded,
@@ -20,3 +25,6 @@ export function whatsappLink(message?: string, phoneE164: string = CONTACT.whats
   const base = `https://wa.me/${phoneE164}`
   return message ? `${base}?text=${encodeURIComponent(message)}` : base
 }
+
+export const DEFAULT_WHATSAPP_MESSAGE =
+  'Olá, Luísa! Vim pelo site e gostaria de saber sobre datas e valores.'
