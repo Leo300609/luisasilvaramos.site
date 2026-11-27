@@ -1,0 +1,21 @@
+# Netlify: Next.js is detected automatically (OpenNext-based runtime).
+# Docs: docs/runbook.md → "Deploy".
+
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "22"
+  NEXT_TELEMETRY_DISABLED = "1"
+
+# Production only receives deploys from `main`. Deploy previews are free on the
+# Free plan; production deploys cost credits, so we release in batches.
+[context.production.environment]
+  APP_ENV = "production"
+
+[context.deploy-preview.environment]
+  APP_ENV = "preview"
+
+[context.branch-deploy.environment]
+  APP_ENV = "preview"
