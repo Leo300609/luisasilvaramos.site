@@ -1,21 +1,27 @@
 # ADR 0002 · Next.js (App Router) + TypeScript strict
-Status: Proposto · Data: 2026-11-27
+
+Status: **Aceito** (Fase 1) · Data: 2026-11-27
 
 ## Contexto
-O sistema tem páginas públicas estáticas e de SEO, um fluxo transacional e um painel. A equipe é uma pessoa, iniciante.
 
-## Alternativas
-- Next.js
-- Remix/React Router
-- Astro + API separada
-- SvelteKit
+O projeto tem páginas públicas estáticas (SEO), um fluxo transacional e um painel, e é mantido por
+uma pessoa iniciante.
 
 ## Decisão
-Next.js na versão estável atual (confirmada na Fase 1), com:
-- Server Components, Server Actions e Route Handlers;
-- `strict: true` e `noUncheckedIndexedAccess`;
-- Tailwind + Radix/shadcn com os tokens do design;
-- `next/font` self-hosted.
+
+- Next.js **16.4.6**, React 19.3, Turbopack.
+- TypeScript strict com `noUncheckedIndexedAccess`, `noImplicitOverride` e `noFallthroughCasesInSwitch`.
+- Tailwind CSS 4 com tokens do design em `@theme`. Breakpoints **substituídos** pelos do design:
+  `tablet` = 720 px e `desktop` = 1100 px.
+- Fontes **self-hosted** (`next/font/local`, subconjunto latin, OFL): Cormorant Garamond, Jost e Sora.
+- `cacheComponents` / PPR **desligados** (o template liga por padrão): são incompatíveis com a CSP
+  por nonce das áreas dinâmicas (ver ADR 0011). As páginas públicas continuam estáticas pelo modelo
+  clássico.
+- `typedRoutes` ligado (links verificados pelo compilador).
+- npm como gerenciador. O lockfile foi gerado com npm 11 porque o npm 10 tem um bug com as peer
+  deps do Vitest 4. `npm ci` funciona normalmente nas duas versões.
 
 ## Consequências
-Um repositório e um deploy só, com SSG/ISR para o site e lógica sensível sempre no servidor. Ficamos presos ao ritmo de mudanças do Next; as versões são fixadas pelo lockfile.
+
+Um repositório e um deploy só. A cada versão nova do Next, ler `node_modules/next/dist/docs` antes de
+atualizar (há mudanças incompatíveis frequentes).
