@@ -1,6 +1,6 @@
 # ADR 0008 · Acesso da cliente a "Minha agenda"
 
-Status: Proposto · Data: 2026-11-27
+Status: **Aceito** (Fase 4a) · Data: 2026-11-27
 
 ## Decisão
 
@@ -15,3 +15,11 @@ Status: Proposto · Data: 2026-11-27
 ## Consequências
 
 Sem conta nem senha para a cliente. Quem tem o e-mail dela acessa, o que é aceitável para o risco.
+
+## Implementação (Fase 4a)
+
+- `booking_tokens` guarda só `sha256(token)`, com expiração 30 dias após o atendimento.
+- Ao confirmar, o token vai num cookie `HttpOnly; SameSite=Lax; Secure` (`lsr_minha_agenda`).
+- `/a/{token}` valida, grava o cookie e redireciona para `/agendar/minha-agenda` (`Referrer-Policy: no-referrer`).
+- Testado: token expirado, adulterado, revogado e o código `LSR-0001` usado como token são todos recusados.
+- "Recuperar acesso" (reenvio do link por e-mail) entra na Fase 4b, junto com o e-mail.

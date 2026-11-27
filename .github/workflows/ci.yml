@@ -66,9 +66,24 @@ jobs:
         run: npx drizzle-kit check
 
   build-e2e:
-    name: Build e testes E2E
+    name: Build e testes E2E (com agendamento)
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: lsr_e2e
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/lsr_e2e
+      ENC_ACTIVE_KEY: v1
+      # Deterministic CEP lookup (never allowed in production) and booking E2E on.
+      FAKE_EXTERNAL_SERVICES: '1'
+      BOOKING_E2E: '1'
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -76,6 +91,12 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
+      # Throwaway secrets for this CI run only.
+      - run: |
+          echo "ENC_KEYS=v1:$(openssl rand -base64 32)" >> "$GITHUB_ENV"
+          echo "BOOKING_SIGNING_SECRET=$(openssl rand -base64 48 | tr -d '\n')" >> "$GITHUB_ENV"
+      - run: npm run db:migrate && npm run db:seed
+      - run: npm run db:set-base -- --lat -23.5503 --lng -46.6339
       - run: npm run build
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e

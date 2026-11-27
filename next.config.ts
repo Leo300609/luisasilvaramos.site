@@ -41,8 +41,13 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
-        source: '/:path*',
+        source: '/((?!a/).*)',
         headers: baseSecurityHeaders({ isDev }),
+      },
+      {
+        // Token links must never leak through the Referer header.
+        source: '/a/:path*',
+        headers: baseSecurityHeaders({ isDev, referrerPolicy: 'no-referrer' }),
       },
       {
         // Static CSP for everything except the nonce-protected areas handled in src/proxy.ts.

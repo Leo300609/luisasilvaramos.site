@@ -7,6 +7,8 @@ export type BookingErrorCode =
   | 'event-too-early'
   | 'too-many-pending'
   | 'consent-required'
+  /** Cancellation/reschedule window closed (policy: 48 h). */
+  | 'outside-window'
 
 export class BookingError extends Error {
   constructor(

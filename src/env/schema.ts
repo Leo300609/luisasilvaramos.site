@@ -47,6 +47,8 @@ export const serverEnvSchema = z
       .string()
       .regex(/^v\d+$/)
       .optional(),
+    /** HMAC secret that signs travel quotes (≥ 32 chars). Generate: openssl rand -base64 48 */
+    BOOKING_SIGNING_SECRET: z.string().min(32).optional(),
   })
   .superRefine((env, ctx) => {
     if (env.APP_ENV === 'production' && !env.NEXT_PUBLIC_SITE_URL.startsWith('https://')) {

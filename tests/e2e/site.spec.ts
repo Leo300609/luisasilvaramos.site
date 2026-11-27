@@ -200,11 +200,16 @@ test.describe('Agendar (provisório)', () => {
     const errors: string[] = []
     page.on('console', (m) => m.type() === 'error' && errors.push(m.text()))
     await page.goto('/agendar')
-    await expect(page.getByRole('heading', { level: 1 })).toContainText('Em breve')
-    await expect(page.getByRole('link', { name: 'Chamar no WhatsApp' })).toHaveAttribute(
-      'href',
-      /wa\.me/,
-    )
+    if (process.env.BOOKING_E2E === '1') {
+      // With a database configured the real booking flow is shown (tests/e2e/booking.spec.ts).
+      await expect(page.getByRole('heading', { level: 1 })).toContainText('Escolha o')
+    } else {
+      await expect(page.getByRole('heading', { level: 1 })).toContainText('Em breve')
+      await expect(page.getByRole('link', { name: 'Chamar no WhatsApp' })).toHaveAttribute(
+        'href',
+        /wa\.me/,
+      )
+    }
     await page.waitForLoadState('networkidle')
     expect(errors).toEqual([])
   })

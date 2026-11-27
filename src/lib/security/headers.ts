@@ -23,13 +23,18 @@ export function buildCsp({ nonce, isDev }: CspOptions): string {
     : [`'self'`, `'unsafe-inline'`, ...THIRD_PARTY.script]
   if (isDev) scriptSrc.push(`'unsafe-eval'`)
 
-  // With a nonce, inline styles must carry it too; dev tooling injects styles without one.
+  // With a nonce, <style> elements must carry it; dev tooling injects styles without one.
   const styleSrc = nonce && !isDev ? [`'self'`, `'nonce-${nonce}'`] : [`'self'`, `'unsafe-inline'`]
 
   const directives: Record<string, string[]> = {
     'default-src': [`'self'`],
     'script-src': scriptSrc,
     'style-src': styleSrc,
+    'style-src-elem': styleSrc,
+    // style="" attributes rendered by React on the server (e.g. CSS variables). They cannot
+    // run code; <style> elements and scripts stay nonce-only. Older browsers without
+    // style-src-attr fall back to style-src (attributes blocked, page still works).
+    'style-src-attr': [`'unsafe-inline'`],
     'img-src': [`'self'`, 'data:', 'blob:', ...THIRD_PARTY.img],
     'font-src': [`'self'`],
     'connect-src': [`'self'`, ...THIRD_PARTY.connect, ...(isDev ? ['ws:'] : [])],
@@ -53,11 +58,17 @@ export function buildCsp({ nonce, isDev }: CspOptions): string {
 export type HeaderPair = { key: string; value: string }
 
 /** Headers sent on every response, regardless of rendering mode. */
-export function baseSecurityHeaders({ isDev }: { isDev: boolean }): HeaderPair[] {
+export function baseSecurityHeaders({
+  isDev,
+  referrerPolicy = 'strict-origin-when-cross-origin',
+}: {
+  isDev: boolean
+  referrerPolicy?: string
+}): HeaderPair[] {
   const headers: HeaderPair[] = [
     { key: 'X-Content-Type-Options', value: 'nosniff' },
     { key: 'X-Frame-Options', value: 'DENY' },
-    { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+    { key: 'Referrer-Policy', value: referrerPolicy },
     {
       key: 'Permissions-Policy',
       value:
