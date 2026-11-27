@@ -14,6 +14,7 @@ import { z } from 'zod'
 
 import { encryptField, type KeyRing } from '../crypto/fields'
 import * as schema from '../db/schema'
+import { enqueueEmail } from '../email/enqueue'
 import { checkEventFit } from '../scheduling/availability'
 import { getDaySlots, loadConfig, type Db } from '../scheduling/context'
 import { addMinutes, localToInstant, timeToMinutes } from '../scheduling/time'
@@ -212,6 +213,18 @@ export async function createBooking(
         actor: input.source === 'admin' ? 'admin' : 'cliente',
         data: { status, fit: slot.fit },
       })
+
+      // Same transaction: the e-mails exist if and only if the booking does.
+      for (const recipient of ['cliente', 'luisa'] as const) {
+        await enqueueEmail(tx, {
+          kind: 'booking_created',
+          recipient,
+          bookingId: row.id,
+          dedupeKey: `booking_created:${recipient}:${row.id}`,
+          data: { expiryHours: config.pendingExpiryHours },
+          createdAt: deps.now,
+        })
+      }
 
       return { id: row.id, code: formatBookingCode(row.codeSeq), status, replayed: false }
     })

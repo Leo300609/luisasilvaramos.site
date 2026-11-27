@@ -22,4 +22,8 @@ export const env = parseServerEnv({
   ENC_KEYS: process.env.ENC_KEYS,
   ENC_ACTIVE_KEY: process.env.ENC_ACTIVE_KEY,
   BOOKING_SIGNING_SECRET: process.env.BOOKING_SIGNING_SECRET,
+  RESEND_API_KEY: process.env.RESEND_API_KEY,
+  EMAIL_FROM: process.env.EMAIL_FROM,
+  EMAIL_REPLY_TO: process.env.EMAIL_REPLY_TO,
+  EMAIL_ADMIN_NOTIFY: process.env.EMAIL_ADMIN_NOTIFY,
 })

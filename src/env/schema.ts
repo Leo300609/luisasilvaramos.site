@@ -49,6 +49,20 @@ export const serverEnvSchema = z
       .optional(),
     /** HMAC secret that signs travel quotes (≥ 32 chars). Generate: openssl rand -base64 48 */
     BOOKING_SIGNING_SECRET: z.string().min(32).optional(),
+    /** Resend API key (Phase 4b). Without it, e-mails wait in the outbox. */
+    RESEND_API_KEY: z
+      .string()
+      .regex(/^re_[A-Za-z0-9_]{10,}$/, 'must be a Resend key (re_…)')
+      .optional(),
+    /** Sender, on a domain verified in Resend: "Luísa Silva Ramos <agenda@dominio>". */
+    EMAIL_FROM: z
+      .string()
+      .regex(/^[^<>]+ <[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+>$/, 'use "Nome <email@dominio>"')
+      .optional(),
+    /** Where clients' replies go (the Luísa's inbox). */
+    EMAIL_REPLY_TO: z.email().optional(),
+    /** Receives new-booking / cancellation / reschedule notices. */
+    EMAIL_ADMIN_NOTIFY: z.email().optional(),
   })
   .superRefine((env, ctx) => {
     if (env.APP_ENV === 'production' && !env.NEXT_PUBLIC_SITE_URL.startsWith('https://')) {
@@ -66,6 +80,13 @@ export const serverEnvSchema = z
         code: 'custom',
         path: ['ENC_ACTIVE_KEY'],
         message: 'must name one of the keys in ENC_KEYS',
+      })
+    }
+    if (env.RESEND_API_KEY && !env.EMAIL_FROM) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['EMAIL_FROM'],
+        message: 'required when RESEND_API_KEY is set',
       })
     }
     if (env.SITE_INDEXABLE && env.APP_ENV !== 'production') {

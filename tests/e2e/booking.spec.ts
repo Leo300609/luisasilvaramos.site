@@ -1,3 +1,6 @@
+import { readdir, readFile } from 'node:fs/promises'
+import path from 'node:path'
+
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type Page } from '@playwright/test'
 
@@ -47,6 +50,25 @@ async function chooseFirstSlot(page: Page, dayIndex = 0) {
   await slot.click()
   return label.slice(0, 5)
 }
+
+type SavedEmail = { to: string; subject: string; text: string }
+
+/** E-mails the local server wrote to `.emails/` (FileMailer), newest first. */
+async function emailsTo(address: string, subject: RegExp): Promise<SavedEmail[]> {
+  const dir = path.join(process.cwd(), '.emails')
+  const files = (await readdir(dir).catch(() => [])).filter((f) => f.endsWith('.json'))
+  const all = await Promise.all(
+    files
+      .sort()
+      .reverse()
+      .map(async (f) => JSON.parse(await readFile(path.join(dir, f), 'utf8'))),
+  )
+  return (all as SavedEmail[]).filter((m) => m.to === address && subject.test(m.subject))
+}
+
+/** Path of the "Minha agenda" link (the site URL in e-mails may differ from the test server). */
+const linkIn = (email: SavedEmail) =>
+  new URL(/https?:\/\/\S+\/a\/[A-Za-z0-9_-]{43}/.exec(email.text)![0]).pathname
 
 async function fillData(page: Page, who = contact()) {
   await page.getByRole('button', { name: 'Continuar' }).click()
@@ -168,6 +190,52 @@ test('Minha agenda sem link mostra a orientação, e link inválido também', as
   await page.goto('/a/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA')
   await expect(page).toHaveURL(/link=invalido/)
   await expect(page.getByText(/link expirou/)).toBeVisible()
+})
+
+test('e-mails: o link da confirmação abre em outro aparelho e "Perdi o link" envia outro', async ({
+  page,
+  browser,
+}) => {
+  await chooseServiceAndPlace(page)
+  const time = await chooseFirstSlot(page, 5)
+  const who = await fillData(page)
+  await page.getByLabel(/Li e aceito a política de cancelamento/).check()
+  await page.getByRole('button', { name: 'Confirmar agendamento' }).click()
+  await expect(page).toHaveURL(/minha-agenda\?novo=1$/)
+
+  // Sent right after the response (after()): poll until it lands.
+  let received: SavedEmail[] = []
+  await expect
+    .poll(async () => (received = await emailsTo(who.email, /^Recebemos seu pedido/)).length)
+    .toBe(1)
+  expect(received[0]!.text).toContain(time)
+
+  // Another device, no cookie: the e-mailed link opens the booking.
+  const other = await (await browser.newContext()).newPage()
+  await other.goto(linkIn(received[0]!))
+  await expect(other).toHaveURL(/\/agendar\/minha-agenda$/)
+  await expect(other.locator('.app-big-time')).toHaveText(time)
+
+  // A third device asks for the link again; the answer never reveals whether the address exists.
+  const third = await (await browser.newContext()).newPage()
+  await third.goto('/agendar/minha-agenda')
+  await third.getByLabel(/Perdeu o link/).fill(who.email)
+  await third.getByRole('button', { name: 'Reenviar link' }).click()
+  await expect(third.getByRole('status')).toContainText('Se esse e-mail tiver um agendamento')
+  const results = await new AxeBuilder({ page: third })
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21aa'])
+    .analyze()
+  expect(results.violations).toEqual([])
+  await expect
+    .poll(async () => (received = await emailsTo(who.email, /Minha agenda/)).length)
+    .toBe(1)
+  await third.goto(linkIn(received[0]!))
+  await expect(third.locator('.app-big-time')).toHaveText(time)
+
+  // Free the slot for the other tests.
+  await third.getByRole('button', { name: 'Cancelar agendamento' }).click()
+  await third.getByRole('button', { name: 'Sim, cancelar' }).click()
+  await expect(third.getByRole('heading', { level: 1 })).toHaveText('Agendamento cancelado')
 })
 
 test('APIs recusam requisições de outra origem (CSRF)', async ({ request }) => {

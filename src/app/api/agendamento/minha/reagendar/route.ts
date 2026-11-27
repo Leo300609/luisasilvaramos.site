@@ -2,6 +2,7 @@ import { z } from 'zod'
 
 import { BookingError } from '@/server/booking/errors'
 import { rescheduleByClient } from '@/server/booking/manage'
+import { deliverEmailsAfterResponse } from '@/server/email/dispatch'
 import { getDb } from '@/server/db/client'
 import { bookingFromCookie } from '@/server/http/booking-cookie'
 import { badRequest, forbidden, isSameOrigin, json, unavailable } from '@/server/http/guards'
@@ -25,6 +26,7 @@ export async function POST(request: Request) {
   if (!bookingId) return json({ error: 'not-found' }, { status: 404 })
   try {
     await rescheduleByClient(db, bookingId, parsed.data, { now })
+    deliverEmailsAfterResponse()
     return json({ ok: true })
   } catch (error) {
     if (error instanceof BookingError) {

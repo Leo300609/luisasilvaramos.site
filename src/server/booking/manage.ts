@@ -7,6 +7,7 @@ import { and, eq, sql } from 'drizzle-orm'
 
 import { decryptField, type KeyRing } from '../crypto/fields'
 import * as schema from '../db/schema'
+import { enqueueEmail } from '../email/enqueue'
 import { getDaySlots, loadConfig, type Db } from '../scheduling/context'
 import { addMinutes, instantToLocal, localToInstant, minutesToTime } from '../scheduling/time'
 import { formatBookingCode } from './create'
@@ -113,6 +114,15 @@ export async function cancelByClient(
     await tx
       .insert(schema.bookingEvents)
       .values({ bookingId, type: 'cancelled', actor: 'cliente', data: {} })
+    for (const recipient of ['cliente', 'luisa'] as const) {
+      await enqueueEmail(tx, {
+        kind: 'booking_cancelled',
+        recipient,
+        bookingId,
+        dedupeKey: `booking_cancelled:${recipient}:${bookingId}`,
+        createdAt: deps.now,
+      })
+    }
   })
 }
 
@@ -185,6 +195,16 @@ export async function rescheduleByClient(
         actor: 'cliente',
         data: { from: b.startsAt.toISOString(), to: slot.start.toISOString() },
       })
+      for (const recipient of ['cliente', 'luisa'] as const) {
+        await enqueueEmail(tx, {
+          kind: 'booking_rescheduled',
+          recipient,
+          bookingId: b.id,
+          dedupeKey: `booking_rescheduled:${recipient}:${b.id}:${deps.now.getTime()}`,
+          data: { from: b.startsAt.toISOString() },
+          createdAt: deps.now,
+        })
+      }
     })
   } catch (error) {
     const code = error as { code?: string; cause?: { code?: string } }

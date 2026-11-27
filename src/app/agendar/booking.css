@@ -1129,3 +1129,28 @@ textarea.app-field {
 html:has(.app-bar) {
   scroll-padding-bottom: 110px;
 }
+
+/* "Perdi o link" form on the Minha agenda fallback page. */
+.resend-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  max-width: 440px;
+  margin-top: 8px;
+  padding: 22px;
+  border: 1px solid var(--color-line);
+  border-radius: 20px;
+  background: var(--color-card);
+  text-align: left;
+}
+.resend-done {
+  max-width: 420px;
+  margin: 8px 0 0;
+  padding: 14px 18px;
+  border-radius: 14px;
+  background: var(--color-olive-bg);
+  color: var(--color-olive-fg);
+  font-size: 15px;
+  line-height: 1.55;
+}

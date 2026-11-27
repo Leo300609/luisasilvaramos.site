@@ -4,6 +4,7 @@ import { createBooking, createBookingSchema } from '@/server/booking/create'
 import { BookingError } from '@/server/booking/errors'
 import { verifyQuote } from '@/server/booking/quote'
 import { issueToken, TOKEN_VALID_AFTER_APPOINTMENT_DAYS } from '@/server/booking/tokens'
+import { deliverEmailsAfterResponse } from '@/server/email/dispatch'
 import { getDb } from '@/server/db/client'
 import { setBookingCookie } from '@/server/http/booking-cookie'
 import { badRequest, forbidden, isSameOrigin, json, unavailable } from '@/server/http/guards'
@@ -65,6 +66,7 @@ export async function POST(request: Request) {
       addMinutes(appointment, TOKEN_VALID_AFTER_APPOINTMENT_DAYS * 24 * 60),
     )
     await setBookingCookie(token, expiresAt)
+    deliverEmailsAfterResponse()
     log.info('booking.created', {
       bookingId: result.id,
       replayed: result.replayed,

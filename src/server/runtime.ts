@@ -1,9 +1,13 @@
 import 'server-only'
 
+import path from 'node:path'
+
 import { env } from '@/env/server'
 
 import { fakeCepLookup, lookupCep, type CepLookup } from './booking/quote'
 import { parseKeyRing, type KeyRing } from './crypto/fields'
+import { FileMailer, ResendMailer, type Mailer } from './email/mailer'
+import type { DeliveryDeps } from './email/outbox'
 import { EstimatedRouteProvider, type RouteProvider } from './scheduling/travel'
 
 let ring: KeyRing | undefined
@@ -39,4 +43,34 @@ export function getCepLookup(): CepLookup {
     return fakeCepLookup
   }
   return (cep) => lookupCep(cep)
+}
+
+let mailer: Mailer | null | undefined
+
+/**
+ * E-mail transport: Resend when configured; in development and E2E tests, a
+ * folder (`.emails/`) so links can be opened locally. `null` in a deployed
+ * environment without a key: e-mails then wait in the outbox until it is set.
+ */
+export function getMailer(): Mailer | null {
+  if (mailer !== undefined) return mailer
+  if (env.RESEND_API_KEY && env.EMAIL_FROM) {
+    mailer = new ResendMailer(env.RESEND_API_KEY, env.EMAIL_FROM)
+  } else if (env.APP_ENV === 'local' || env.APP_ENV === 'test') {
+    mailer = new FileMailer(path.join(process.cwd(), '.emails'))
+  } else {
+    mailer = null
+  }
+  return mailer
+}
+
+export function emailDeliveryDeps(now: Date): DeliveryDeps {
+  return {
+    mailer: getMailer(),
+    keyRing: getKeyRing(),
+    siteUrl: env.NEXT_PUBLIC_SITE_URL,
+    adminEmail: env.EMAIL_ADMIN_NOTIFY ?? null,
+    replyTo: env.EMAIL_REPLY_TO ?? null,
+    now,
+  }
 }

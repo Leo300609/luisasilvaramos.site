@@ -9,6 +9,8 @@ type StatusPageProps = {
   description: string
   action?: Action
   secondary?: Action
+  /** Extra content under the description (e.g. a small form). */
+  children?: ReactNode
 }
 
 const primaryClass =
@@ -36,7 +38,14 @@ function ActionLink({ action, className }: { action: Action; className: string }
  * Simple full-screen message in the site's visual language. Used by the
  * temporary home, 404 and error pages (design gap L6).
  */
-export function StatusPage({ kicker, title, description, action, secondary }: StatusPageProps) {
+export function StatusPage({
+  kicker,
+  title,
+  description,
+  action,
+  secondary,
+  children,
+}: StatusPageProps) {
   return (
     <main
       id="conteudo"
@@ -56,6 +65,7 @@ export function StatusPage({ kicker, title, description, action, secondary }: St
           {title}
         </h1>
         <p className="max-w-xl text-lg leading-relaxed font-light text-brown">{description}</p>
+        {children}
         {(action ?? secondary) && (
           <div className="mt-2 flex flex-col items-center gap-4 tablet:flex-row tablet:gap-8">
             {action && <ActionLink action={action} className={primaryClass} />}
