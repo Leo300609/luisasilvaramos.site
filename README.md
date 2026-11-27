@@ -136,7 +136,10 @@ Primeira vez com os testes E2E: `npx playwright install chromium`.
 ```
 src/
 ├── app/                  rotas, layout, páginas de erro e API
-├── components/           componentes de interface
+├── assets/               imagens otimizadas pelo next/image
+├── components/
+│   └── site/             seções do site público (header, hero, portfólio…)
+├── content/              textos e dados do site (placeholders do design marcados)
 ├── env/                  esquema e validação das variáveis de ambiente
 ├── lib/
 │   ├── security/         cabeçalhos HTTP e Content Security Policy

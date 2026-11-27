@@ -7,7 +7,7 @@ test.describe('Fundação', () => {
     expect(response?.status()).toBe(200)
     await expect(page.locator('html')).toHaveAttribute('lang', 'pt-BR')
     await expect(page.getByRole('heading', { level: 1 })).toContainText('Realce a sua')
-    const whatsapp = page.getByRole('link', { name: /whatsapp/i })
+    const whatsapp = page.getByRole('link', { name: 'Conversar no WhatsApp' })
     await expect(whatsapp).toHaveAttribute('href', /^https:\/\/wa\.me\/5511930546322\?text=/)
     await expect(whatsapp).toHaveAttribute('rel', /noopener/)
   })

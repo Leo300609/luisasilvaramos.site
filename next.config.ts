@@ -25,6 +25,11 @@ const nextConfig: NextConfig = {
     SITE_INDEXABLE: String(buildEnv.SITE_INDEXABLE),
     COMMIT_REF: buildEnv.COMMIT_REF ?? '',
   },
+  images: {
+    // AVIF first (much smaller photos), WebP as fallback.
+    formats: ['image/avif', 'image/webp'],
+    qualities: [70, 75],
+  },
   turbopack: {
     rules: {
       '*.css': {
