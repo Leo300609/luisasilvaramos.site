@@ -1,0 +1,6 @@
+# Always use LF line endings (Prettier and the CI expect LF, also on Windows).
+* text=auto eol=lf
+*.woff2 binary
+*.png binary
+*.webp binary
+*.ico binary
