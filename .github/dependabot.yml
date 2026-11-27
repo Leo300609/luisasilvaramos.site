@@ -12,13 +12,17 @@ updates:
       minor-and-patch:
         update-types: [minor, patch]
     ignore:
-      # Incompatible majors (Nov 2026): Next 16 does not support TypeScript 7 yet,
+      # Majors handled manually (Nov 2026): Next 16 does not support TypeScript 7 yet,
       # and Vitest 5 broke the test runner. Migrated manually when ready.
       - dependency-name: typescript
         update-types: [version-update:semver-major]
       - dependency-name: vitest
         update-types: [version-update:semver-major]
       - dependency-name: '@vitest/*'
+        update-types: [version-update:semver-major]
+      # @types/node must follow the runtime major (Node 22 on Netlify, .nvmrc).
+      # Bump it together with NODE_VERSION, never on its own.
+      - dependency-name: '@types/node'
         update-types: [version-update:semver-major]
 
   - package-ecosystem: github-actions
