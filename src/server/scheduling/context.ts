@@ -167,3 +167,34 @@ export async function findNextAvailableDays(
   }
   return found
 }
+
+/** For the calendar: which days of a month have at least one slot. */
+export async function getMonthAvailability(
+  db: Db,
+  query: { month: string; now: Date; durationMin: number; travel: Travel; eventStart?: string },
+): Promise<Record<LocalDate, number>> {
+  const cfg = await loadConfig(db)
+  const hours = await loadHours(db)
+  const first = `${query.month}-01`
+  const [y, m] = query.month.split('-').map(Number)
+  const days = new Date(Date.UTC(y ?? 0, m ?? 1, 0)).getUTCDate()
+  const from = localToInstant(addDays(first, -1), 0)
+  const to = localToInstant(addDays(first, days + 1), 0)
+  const [busy, blocks] = await Promise.all([loadBusy(db, from, to), loadBlocks(db, from, to)])
+  const out: Record<LocalDate, number> = {}
+  for (let i = 0; i < days; i++) {
+    const date = addDays(first, i)
+    out[date] = computeDaySlots({
+      date,
+      now: query.now,
+      durationMin: query.durationMin,
+      rules: cfg.rules,
+      hours: hours.get(weekdayOf(date)),
+      blocks,
+      busy,
+      travel: query.travel,
+      ...(query.eventStart ? { eventStart: query.eventStart } : {}),
+    }).length
+  }
+  return out
+}
