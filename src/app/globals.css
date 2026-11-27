@@ -1,0 +1,98 @@
+@import 'tailwindcss';
+
+/*
+ * Design tokens extracted from the Claude Design canvas
+ * "Luísa Silva Ramos — Site e Agendamento" (see docs/fase-0-descoberta.md §1.1).
+ * Use them through Tailwind utilities: bg-sand, text-espresso, border-line, font-display…
+ */
+@theme {
+  /* Brand */
+  --color-gold: #f2b705;
+  --color-butter: #f8de7e;
+  --color-gold-burnt: #c9972b;
+  --color-gold-text: #7a5a12;
+  --color-espresso: #2b1d14;
+  --color-espresso-hover: #45301f;
+  --color-brown: #6b5444;
+  --color-sand: #f5ebdd;
+  --color-cream: #fbf6ee;
+  --color-card: #fffdf8;
+  --color-line: #e3d3bc;
+  --color-line-soft: #eadbc4;
+  --color-line-strong: #dcc9ae;
+  --color-field-hover: #cdb48c;
+  --color-placeholder: #8f7a69;
+  --color-muted: #9c8b7c;
+  --color-disabled-bg: #efe6d8;
+
+  /* Status (calendar, badges, folga) */
+  --color-olive: #7a8b3c;
+  --color-olive-fg: #4f5b22;
+  --color-olive-bg: #eef1df;
+  --color-terra: #b5543a;
+  --color-terra-fg: #9c4630;
+  --color-terra-bg: #fbede7;
+  --color-pending-bg: #fff1bf;
+  --color-pending-fg: #6b4e00;
+  --color-done-bg: #f3e6cc;
+  --color-done-fg: #6e5216;
+
+  /* Typography (files self-hosted in src/app/fonts, wired in layout.tsx) */
+  --font-display: var(--font-cormorant), 'Cormorant Garamond', Georgia, serif;
+  --font-sans: var(--font-jost), 'Jost', system-ui, sans-serif;
+  --font-signature: var(--font-sora), 'Sora', system-ui, sans-serif;
+
+  /* Breakpoints from the design: mobile < 720 ≤ tablet < 1100 ≤ desktop */
+  --breakpoint-*: initial;
+  --breakpoint-tablet: 45rem;
+  --breakpoint-desktop: 68.75rem;
+
+  /* Motion */
+  --ease-soft: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--color-sand);
+    color: var(--color-espresso);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection {
+    background-color: var(--color-butter);
+    color: var(--color-espresso);
+  }
+
+  /* Visible keyboard focus, as specified in the design stylesheets. */
+  :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid var(--color-espresso);
+    outline-offset: 3px;
+    border-radius: 6px;
+  }
+
+  .on-dark :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+    outline-color: var(--color-gold);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      animation-delay: 0s !important;
+      animation-iteration-count: 1 !important;
+      transition: none !important;
+    }
+  }
+}
