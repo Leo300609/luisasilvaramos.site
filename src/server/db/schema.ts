@@ -1,0 +1,272 @@
+/**
+ * Database schema (Drizzle). The SQL migrations in /drizzle are the source of
+ * truth for what Drizzle cannot express: the btree_gist extension, the
+ * anti-overlap EXCLUDE constraint and the trigger that computes `occupied`.
+ * See docs/adr/0003 and 0004.
+ */
+import { sql } from 'drizzle-orm'
+import {
+  bigint,
+  boolean,
+  check,
+  customType,
+  index,
+  integer,
+  jsonb,
+  numeric,
+  pgEnum,
+  pgSequence,
+  pgTable,
+  smallint,
+  text,
+  time,
+  timestamp,
+  uniqueIndex,
+  uuid,
+} from 'drizzle-orm/pg-core'
+
+/** Postgres tstzrange, read as its text form. Only the trigger writes it. */
+const tstzrange = customType<{ data: string; driverData: string }>({
+  dataType: () => 'tstzrange',
+})
+
+const timestamps = {
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}
+
+export const bookingStatus = pgEnum('booking_status', [
+  'pendente',
+  'confirmado',
+  'concluido',
+  'cancelado',
+])
+
+export const cancelReason = pgEnum('cancel_reason', [
+  'pedido_cliente',
+  'imprevisto_maquiadora',
+  'nao_compareceu',
+  'recusado',
+  'expirado',
+  'outro',
+])
+
+export const bookingSource = pgEnum('booking_source', ['site', 'admin'])
+export const slotMode = pgEnum('slot_mode', ['grid', 'auto'])
+
+export const eventDuration = pgEnum('event_duration', [
+  'ate_2h',
+  '2_3h',
+  '3_4h',
+  '4_6h',
+  'mais_6h',
+  'dia_inteiro',
+])
+
+export const paymentMethod = pgEnum('payment_method', ['pix', 'cartao', 'dinheiro'])
+export const paymentStatus = pgEnum('payment_status', ['pendente', 'sinal_pago', 'pago'])
+
+/** Human-readable booking code: LSR-0001. A label, never a credential. */
+export const bookingCodeSeq = pgSequence('booking_code_seq', { startWith: 1 })
+
+export const services = pgTable(
+  'services',
+  {
+    id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+    slug: text('slug').notNull().unique(),
+    name: text('name').notNull(),
+    category: text('category').notNull(),
+    durationMin: integer('duration_min').notNull(),
+    priceCents: integer('price_cents').notNull(),
+    description: text('description').notNull().default(''),
+    active: boolean('active').notNull().default(true),
+    sortOrder: integer('sort_order').notNull().default(0),
+    ...timestamps,
+  },
+  (t) => [
+    check('services_duration_ck', sql`${t.durationMin} between 15 and 600`),
+    check('services_price_ck', sql`${t.priceCents} >= 0`),
+  ],
+)
+
+/** Weekly opening hours, local time (America/Sao_Paulo). Includes travel time. */
+export const businessHours = pgTable(
+  'business_hours',
+  {
+    weekday: smallint('weekday').primaryKey(), // 0 = domingo … 6 = sábado
+    isOpen: boolean('is_open').notNull().default(false),
+    opensAt: time('opens_at').notNull().default('08:00'),
+    closesAt: time('closes_at').notNull().default('19:00'),
+  },
+  (t) => [
+    check('business_hours_weekday_ck', sql`${t.weekday} between 0 and 6`),
+    check('business_hours_range_ck', sql`${t.closesAt} > ${t.opensAt}`),
+  ],
+)
+
+/** Single-row table with every scheduling rule editable in the admin panel. */
+export const scheduleSettings = pgTable(
+  'schedule_settings',
+  {
+    id: smallint('id').primaryKey().default(1),
+    slotMode: slotMode('slot_mode').notNull().default('auto'),
+    slotGrid: text('slot_grid')
+      .array()
+      .notNull()
+      .default(sql`'{08:00,09:30,11:00,14:00,15:30,17:00}'::text[]`),
+    slotStepMin: integer('slot_step_min').notNull().default(30),
+    bufferMin: integer('buffer_min').notNull().default(15),
+    minNoticeHours: integer('min_notice_hours').notNull().default(24),
+    horizonDays: integer('horizon_days').notNull().default(180),
+    lunchEnabled: boolean('lunch_enabled').notNull().default(true),
+    lunchStart: time('lunch_start').notNull().default('12:30'),
+    lunchEnd: time('lunch_end').notNull().default('13:30'),
+    manualConfirmation: boolean('manual_confirmation').notNull().default(true),
+    pendingExpiryHours: integer('pending_expiry_hours').notNull().default(24),
+    cancelWindowHours: integer('cancel_window_hours').notNull().default(48),
+    maxPendingPerContact: integer('max_pending_per_contact').notNull().default(2),
+    /** Event rule (Phase 0, R3): ready this long before the event… */
+    readyBeforeEventMin: integer('ready_before_event_min').notNull().default(30),
+    /** …and we recommend finishing this much earlier still. */
+    recommendedMarginMin: integer('recommended_margin_min').notNull().default(60),
+    /** Travel fee (Phase 0, R4). TODO(Leo): values to be confirmed by the Luísa. */
+    travelMinFeeCents: integer('travel_min_fee_cents').notNull().default(3000),
+    travelPerKmCents: integer('travel_per_km_cents').notNull().default(250),
+    travelMaxRadiusKm: integer('travel_max_radius_km').notNull().default(40),
+    travelSafetyFactor: numeric('travel_safety_factor', { precision: 3, scale: 2 })
+      .notNull()
+      .default('1.30'),
+    /** Luísa's departure address, encrypted (never shown publicly). */
+    baseAddressEnc: text('base_address_enc'),
+    bookingsPaused: boolean('bookings_paused').notNull().default(false),
+    updatedAt: timestamps.updatedAt,
+  },
+  (t) => [
+    check('schedule_settings_singleton_ck', sql`${t.id} = 1`),
+    check('schedule_settings_step_ck', sql`${t.slotStepMin} between 5 and 240`),
+    check('schedule_settings_buffer_ck', sql`${t.bufferMin} between 0 and 120`),
+    check('schedule_settings_lunch_ck', sql`${t.lunchEnd} > ${t.lunchStart}`),
+  ],
+)
+
+/** Times the Luísa is unavailable (vacation, appointments). */
+export const blocks = pgTable(
+  'blocks',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    startsAt: timestamp('starts_at', { withTimezone: true }).notNull(),
+    endsAt: timestamp('ends_at', { withTimezone: true }).notNull(),
+    allDay: boolean('all_day').notNull().default(false),
+    reason: text('reason').notNull().default(''),
+    ...timestamps,
+  },
+  (t) => [
+    check('blocks_range_ck', sql`${t.endsAt} > ${t.startsAt}`),
+    index('blocks_range_idx').on(t.startsAt, t.endsAt),
+  ],
+)
+
+export const customers = pgTable(
+  'customers',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    name: text('name').notNull(),
+    phoneE164: text('phone_e164').notNull(),
+    email: text('email').notNull(),
+    cpfEnc: text('cpf_enc'),
+    internalNotesEnc: text('internal_notes_enc'),
+    anonymizedAt: timestamp('anonymized_at', { withTimezone: true }),
+    ...timestamps,
+  },
+  (t) => [
+    uniqueIndex('customers_phone_uq')
+      .on(t.phoneE164)
+      .where(sql`${t.anonymizedAt} is null`),
+    index('customers_email_idx').on(t.email),
+    check('customers_email_lower_ck', sql`${t.email} = lower(${t.email})`),
+  ],
+)
+
+export const bookings = pgTable(
+  'bookings',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    codeSeq: bigint('code_seq', { mode: 'number' })
+      .notNull()
+      .unique()
+      .default(sql`nextval('booking_code_seq')`),
+    customerId: uuid('customer_id')
+      .notNull()
+      .references(() => customers.id),
+    serviceId: integer('service_id')
+      .notNull()
+      .references(() => services.id),
+    // Snapshot of the service at booking time (prices and durations may change later).
+    serviceName: text('service_name').notNull(),
+    durationMin: integer('duration_min').notNull(),
+    priceCents: integer('price_cents').notNull(),
+    travelFeeCents: integer('travel_fee_cents').notNull().default(0),
+    travelToMin: integer('travel_to_min').notNull().default(0),
+    travelBackMin: integer('travel_back_min').notNull().default(0),
+    travelDistanceKm: numeric('travel_distance_km', { precision: 6, scale: 1 }),
+    bufferMin: integer('buffer_min').notNull().default(0),
+    startsAt: timestamp('starts_at', { withTimezone: true }).notNull(),
+    endsAt: timestamp('ends_at', { withTimezone: true }).notNull(),
+    /** [start − travel to, end + travel back + buffer). Set by trigger, never by the app. */
+    occupied: tstzrange('occupied')
+      .notNull()
+      .default(sql`'empty'::tstzrange`),
+    eventStartsAt: timestamp('event_starts_at', { withTimezone: true }),
+    eventDuration: eventDuration('event_duration'),
+    addressEnc: text('address_enc').notNull(),
+    complementEnc: text('complement_enc'),
+    lookNotesEnc: text('look_notes_enc'),
+    allergyNotesEnc: text('allergy_notes_enc'),
+    internalNotesEnc: text('internal_notes_enc'),
+    paymentMethod: paymentMethod('payment_method'),
+    paymentStatus: paymentStatus('payment_status').notNull().default('pendente'),
+    status: bookingStatus('status').notNull().default('pendente'),
+    cancelReason: cancelReason('cancel_reason'),
+    cancelNote: text('cancel_note'),
+    source: bookingSource('source').notNull().default('site'),
+    idempotencyKey: text('idempotency_key').unique(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }),
+    confirmedAt: timestamp('confirmed_at', { withTimezone: true }),
+    cancelledAt: timestamp('cancelled_at', { withTimezone: true }),
+    completedAt: timestamp('completed_at', { withTimezone: true }),
+    ...timestamps,
+  },
+  (t) => [
+    check('bookings_range_ck', sql`${t.endsAt} > ${t.startsAt}`),
+    check(
+      'bookings_minutes_ck',
+      sql`${t.durationMin} > 0 and ${t.travelToMin} >= 0 and ${t.travelBackMin} >= 0 and ${t.bufferMin} >= 0`,
+    ),
+    check('bookings_cancel_ck', sql`(${t.status} = 'cancelado') = (${t.cancelReason} is not null)`),
+    index('bookings_starts_idx').on(t.startsAt),
+    index('bookings_customer_idx').on(t.customerId),
+    index('bookings_status_idx').on(t.status),
+  ],
+)
+
+/** Timeline shown in the admin drawer ("Histórico"). Append-only. */
+export const bookingEvents = pgTable(
+  'booking_events',
+  {
+    id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
+    bookingId: uuid('booking_id')
+      .notNull()
+      .references(() => bookings.id),
+    type: text('type').notNull(),
+    actor: text('actor').notNull(), // 'cliente' | 'sistema' | admin user id (Phase 5)
+    data: jsonb('data').notNull().default({}),
+    createdAt: timestamps.createdAt,
+  },
+  (t) => [index('booking_events_booking_idx').on(t.bookingId, t.createdAt)],
+)
+
+export type Service = typeof services.$inferSelect
+export type Booking = typeof bookings.$inferSelect
+export type ScheduleSettingsRow = typeof scheduleSettings.$inferSelect
+export type BusinessHoursRow = typeof businessHours.$inferSelect
+export type Block = typeof blocks.$inferSelect
