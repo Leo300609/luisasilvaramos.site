@@ -19,6 +19,9 @@ describe('buildCsp', () => {
     const csp = buildCsp({ nonce: 'abc123', isDev: false })
     expect(directive(csp, 'script-src')).toBe(`'self' 'nonce-abc123' 'strict-dynamic'`)
     expect(directive(csp, 'style-src')).toBe(`'self' 'nonce-abc123'`)
+    expect(directive(csp, 'style-src-elem')).toBe(`'self' 'nonce-abc123'`)
+    // Only style="" attributes are relaxed: they cannot execute code.
+    expect(directive(csp, 'style-src-attr')).toBe(`'unsafe-inline'`)
     expect(csp).not.toContain('unsafe-eval')
   })
 

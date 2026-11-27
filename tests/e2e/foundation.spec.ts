@@ -51,14 +51,15 @@ test.describe('Fundação', () => {
     const csp1 = first.headers()['content-security-policy'] ?? ''
     const csp2 = second.headers()['content-security-policy'] ?? ''
     expect(csp1).toMatch(/'nonce-[A-Za-z0-9+/=]+' 'strict-dynamic'/)
-    expect(csp1).not.toContain("'unsafe-inline'; img-src")
+    const scriptSrc = csp1.split('; ').find((d) => d.startsWith('script-src ')) ?? ''
+    expect(scriptSrc).not.toContain('unsafe-inline')
     expect(csp1).not.toEqual(csp2)
     expect(first.headers()['x-robots-tag']).toContain('noindex')
     expect(first.headers()['cache-control']).toContain('no-store')
   })
 
   test('links com token não vazam pelo Referer', async ({ request }) => {
-    const response = await request.get('/a/qualquer-token')
+    const response = await request.get('/a/qualquer-token', { maxRedirects: 0 })
     expect(response.headers()['referrer-policy']).toBe('no-referrer')
     expect(response.headers()['x-robots-tag']).toContain('noindex')
   })

@@ -9,6 +9,7 @@ const baseURL = process.env.E2E_BASE_URL ?? `http://localhost:${PORT}`
  */
 export default defineConfig({
   testDir: './tests/e2e',
+  globalSetup: './tests/e2e/global-setup.ts',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
@@ -16,6 +17,9 @@ export default defineConfig({
   use: {
     baseURL,
     trace: 'off',
+    // Fail fast with a useful call log instead of hanging until the test timeout.
+    actionTimeout: 10_000,
+    navigationTimeout: 15_000,
     // Optional: use a pre-installed Chromium (e.g. cloud dev environments).
     ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE
       ? { launchOptions: { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE } }
