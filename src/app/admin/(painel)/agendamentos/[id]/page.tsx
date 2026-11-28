@@ -234,6 +234,15 @@ export default async function BookingDetailPage({
         {b.status === 'pendente' && (
           <BookingActions bookingId={b.id} customerFirstName={first ?? ''} />
         )}
+        {b.status === 'confirmado' && (
+          <ManageActions
+            bookingId={b.id}
+            date={b.date}
+            time={b.time}
+            canClose={new Date(b.startsAt) < new Date()}
+            hasEmail={Boolean(b.email)}
+          />
+        )}
       </div>
     </article>
   )
