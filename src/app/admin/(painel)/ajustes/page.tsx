@@ -7,7 +7,7 @@ import { getDb } from '@/server/db/client'
 import { getKeyRing } from '@/server/runtime'
 
 import { logoutEverywhereAction } from '../actions'
-import { BaseAddressForm, HoursForm, RulesForm, ServiceForm } from './settings-forms'
+import { BaseAddressForm, HoursForm, PasswordForm, RulesForm, ServiceForm } from './settings-forms'
 
 export const metadata: Metadata = { title: 'Ajustes' }
 
@@ -102,6 +102,9 @@ export default async function SettingsPage() {
         <h2 id="h-seg" className="adm-h2">
           Segurança
         </h2>
+        <h3 className="adm-label">Trocar senha</h3>
+        <PasswordForm />
+        <h3 className="adm-label">Sair de todos os dispositivos</h3>
         <p className="adm-sub">
           Perdeu um celular ou entrou num computador que não é seu? Desconecte todos os
           dispositivos. Você vai precisar entrar de novo com senha e código.

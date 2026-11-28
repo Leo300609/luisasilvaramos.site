@@ -593,3 +593,48 @@ export async function resetTwoFactor(db: Db, email: string, now: Date): Promise<
   await revokeAllSessions(db, user.id, now)
   return true
 }
+
+export type ChangePasswordResult =
+  { kind: 'ok' } | { kind: 'wrong-password' } | { kind: 'weak'; message: string }
+
+/** From the panel: needs the current password; signs out every other device. */
+export async function changePassword(
+  db: Db,
+  input: { userId: string; sessionId: string; current: string; next: string },
+  client: ClientInfo,
+  deps: AuthDeps,
+): Promise<ChangePasswordResult> {
+  const [user] = await db
+    .select()
+    .from(schema.adminUsers)
+    .where(eq(schema.adminUsers.id, input.userId))
+  if (!user || !(await verifyPassword(input.current, user.passwordHash))) {
+    await audit(db, deps.secret, {
+      actorId: input.userId,
+      action: 'password.change_failed',
+      ip: client.ip,
+      now: deps.now,
+    })
+    return { kind: 'wrong-password' }
+  }
+  const problem = passwordProblem(input.next, user.email)
+  if (problem) return { kind: 'weak', message: problem }
+  if (input.next === input.current)
+    return { kind: 'weak', message: 'A nova senha precisa ser diferente da atual.' }
+  await db
+    .update(schema.adminUsers)
+    .set({
+      passwordHash: await hashPassword(input.next),
+      passwordChangedAt: deps.now,
+      updatedAt: deps.now,
+    })
+    .where(eq(schema.adminUsers.id, user.id))
+  await revokeAllSessions(db, user.id, deps.now, input.sessionId)
+  await audit(db, deps.secret, {
+    actorId: user.id,
+    action: 'password.changed',
+    ip: client.ip,
+    now: deps.now,
+  })
+  return { kind: 'ok' }
+}

@@ -44,6 +44,10 @@ node -e "console.log(require('crypto').randomBytes(48).toString('base64'))"
 
 ## 4. Migrações do banco e contas do painel
 
+> **Feito em 28/11/2026** (via Neon): as 8 migrações, os 4 serviços e as contas da Luísa e do Leo
+> (senhas provisórias; troque em **Ajustes → Segurança → Trocar senha**). Os passos abaixo ficam
+> para referência e para bancos novos.
+
 No seu computador, no PowerShell, dentro da pasta do projeto atualizado (`git pull`). As variáveis
 abaixo valem **só para esta janela** do terminal; feche-a ao terminar.
 

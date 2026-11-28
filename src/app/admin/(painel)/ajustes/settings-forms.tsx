@@ -7,6 +7,7 @@ import type { RulesInput } from '@/server/admin/settings'
 
 import {
   baseAddressAction,
+  changePasswordAction,
   hoursAction,
   rulesAction,
   serviceAction,
@@ -368,6 +369,48 @@ export function BaseAddressForm() {
         <input name="number" maxLength={20} />
       </label>
       <Save pending={pending} label="Salvar endereço" />
+    </form>
+  )
+}
+
+export function PasswordForm() {
+  const [state, action, pending] = useActionState<FormState, FormData>(changePasswordAction, {})
+  return (
+    <form action={action} className="adm-form-grid">
+      <Feedback state={state} />
+      <label className="adm-field is-wide">
+        <span>Senha atual</span>
+        <input
+          type="password"
+          name="current"
+          required
+          autoComplete="current-password"
+          maxLength={256}
+        />
+      </label>
+      <label className="adm-field">
+        <span>Nova senha</span>
+        <input
+          type="password"
+          name="next"
+          required
+          minLength={12}
+          maxLength={128}
+          autoComplete="new-password"
+        />
+        <small>Pelo menos 12 caracteres. Uma frase com palavras soltas é ótima.</small>
+      </label>
+      <label className="adm-field">
+        <span>Repita a nova senha</span>
+        <input
+          type="password"
+          name="confirm"
+          required
+          maxLength={128}
+          autoComplete="new-password"
+        />
+      </label>
+      <Save pending={pending} label="Trocar senha" />
     </form>
   )
 }

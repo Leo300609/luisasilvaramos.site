@@ -4,6 +4,7 @@ import { afterAll, beforeEach, describe, expect, it } from 'vitest'
 import { confirmBooking, declineBooking, listBookings } from '@/server/admin/bookings'
 import {
   beginTotpEnrollment,
+  changePassword,
   checkSession,
   confirmTotpEnrollment,
   createAdminUser,
@@ -397,5 +398,60 @@ describe('panel actions on bookings', () => {
     await expect(listBookings(db, { status: 'todos', q: '100%_', page: 1 })).resolves.toMatchObject(
       { total: 0 },
     )
+  })
+})
+
+describe('change password (panel)', () => {
+  it('needs the current password, applies the policy and signs out the other devices', async () => {
+    const a = await enrolled()
+    const later = addMinutes(NOW, 2)
+    const step1 = await loginWithPassword(
+      db,
+      { email: EMAIL, password: PASSWORD, remember: false },
+      client,
+      deps(later),
+    )
+    if (step1.kind !== 'ok') throw new Error('login failed')
+    const b = await verifySecondFactor(
+      db,
+      step1.token,
+      codeFor(a.secret, later),
+      client,
+      deps(later),
+    )
+    if (b.kind !== 'ok') throw new Error('mfa failed')
+    const sessionA = (await checkSession(db, a.token, NOW)) as { session: { id: string } }
+    const base = { userId, sessionId: sessionA.session.id }
+    await expect(
+      changePassword(
+        db,
+        { ...base, current: 'errada', next: 'uma senha nova e longa' },
+        client,
+        deps(),
+      ),
+    ).resolves.toEqual({ kind: 'wrong-password' })
+    await expect(
+      changePassword(db, { ...base, current: PASSWORD, next: 'curta' }, client, deps()),
+    ).resolves.toMatchObject({ kind: 'weak' })
+    await expect(
+      changePassword(
+        db,
+        { ...base, current: PASSWORD, next: 'uma senha nova e longa' },
+        client,
+        deps(),
+      ),
+    ).resolves.toEqual({ kind: 'ok' })
+    await expect(checkSession(db, a.token, NOW)).resolves.toMatchObject({ status: 'valid' })
+    await expect(checkSession(db, b.token, addMinutes(NOW, 1))).resolves.toEqual({
+      status: 'expired',
+    })
+    await expect(
+      loginWithPassword(
+        db,
+        { email: EMAIL, password: 'uma senha nova e longa', remember: false },
+        client,
+        deps(addMinutes(NOW, 2)),
+      ),
+    ).resolves.toMatchObject({ kind: 'ok' })
   })
 })

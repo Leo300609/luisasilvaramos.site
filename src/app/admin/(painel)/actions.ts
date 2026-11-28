@@ -29,7 +29,7 @@ import {
   requireAdmin,
 } from '@/server/admin/session'
 import { audit } from '@/server/auth/audit'
-import { revokeAllSessions, revokeSession } from '@/server/auth/service'
+import { changePassword, revokeAllSessions, revokeSession } from '@/server/auth/service'
 import { BookingError } from '@/server/booking/errors'
 import { getDb } from '@/server/db/client'
 import { deliverEmailsAfterResponse } from '@/server/email/dispatch'
@@ -494,4 +494,20 @@ export async function baseAddressAction(_prev: FormState, form: FormData): Promi
   }
   revalidatePath('/admin/ajustes')
   return { ok: `Endereço de saída salvo: ${r.address}` }
+}
+
+export async function changePasswordAction(_prev: FormState, form: FormData): Promise<FormState> {
+  const { user, sessionId } = await requireAdmin()
+  const next = String(form.get('next') ?? '')
+  if (next !== String(form.get('confirm') ?? ''))
+    return { error: 'As duas senhas novas não são iguais.' }
+  const result = await changePassword(
+    getDb(),
+    { userId: user.id, sessionId, current: String(form.get('current') ?? ''), next },
+    await clientInfo(),
+    authDeps(),
+  )
+  if (result.kind === 'wrong-password') return { error: 'A senha atual está incorreta.' }
+  if (result.kind === 'weak') return { error: result.message }
+  return { ok: 'Senha alterada. Os outros dispositivos foram desconectados.' }
 }
