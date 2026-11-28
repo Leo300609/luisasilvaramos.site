@@ -3,6 +3,7 @@ import { connection } from 'next/server'
 
 import { AppHeader } from '@/components/booking/app-header'
 import { MyBooking } from '@/components/booking/my-booking'
+import { ResendLinkForm } from '@/components/booking/resend-link-form'
 import { StatusPage } from '@/components/status-page'
 import { env } from '@/env/server'
 import { getClientBooking } from '@/server/booking/manage'
@@ -38,12 +39,14 @@ export default async function MinhaAgendaPage({
         title="Agendamento não encontrado"
         description={
           params.link === 'invalido'
-            ? 'Esse link expirou ou não é mais válido. Use o link mais recente que enviamos por e-mail ou fale com a Luísa pelo WhatsApp.'
-            : 'Para ver o seu agendamento, abra o link que enviamos por e-mail depois da confirmação. Se preferir, fale com a Luísa pelo WhatsApp.'
+            ? 'Esse link expirou ou não é mais válido. Peça um link novo abaixo ou fale com a Luísa pelo WhatsApp.'
+            : 'Para ver o seu agendamento, abra o link que enviamos por e-mail. Se não encontrar, peça outro abaixo.'
         }
         action={{ href: '/agendar', label: 'Fazer um agendamento' }}
         secondary={{ href: '/', label: 'Voltar ao site' }}
-      />
+      >
+        {db && <ResendLinkForm />}
+      </StatusPage>
     )
   }
 

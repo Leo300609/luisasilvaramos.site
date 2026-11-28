@@ -63,3 +63,27 @@ describe('parseServerEnv', () => {
     }
   })
 })
+
+describe('e-mail variables', () => {
+  it('requires EMAIL_FROM with a Resend key', () => {
+    expect(() =>
+      parseServerEnv({ NODE_ENV: 'development', RESEND_API_KEY: 're_abcdefghijklmnop' }),
+    ).toThrow(/EMAIL_FROM/)
+  })
+
+  it('accepts a complete configuration', () => {
+    const env = parseServerEnv({
+      NODE_ENV: 'development',
+      RESEND_API_KEY: 're_abcdefghijklmnop',
+      EMAIL_FROM: 'Luísa Silva Ramos <agenda@luisasilvaramos.com.br>',
+      EMAIL_ADMIN_NOTIFY: 'luisa@exemplo.com',
+    })
+    expect(env.EMAIL_ADMIN_NOTIFY).toBe('luisa@exemplo.com')
+  })
+
+  it('rejects a malformed sender', () => {
+    expect(() =>
+      parseServerEnv({ NODE_ENV: 'development', EMAIL_FROM: 'agenda@luisasilvaramos.com.br' }),
+    ).toThrow(/EMAIL_FROM/)
+  })
+})

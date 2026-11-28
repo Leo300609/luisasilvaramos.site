@@ -50,3 +50,6 @@ next-env.d.ts
 
 # netlify
 .netlify
+
+# e-mails written by the local mailer (development / E2E)
+/.emails/

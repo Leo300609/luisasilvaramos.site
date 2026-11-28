@@ -53,6 +53,21 @@ Environment variables_. Depois de mudar, faça um novo deploy (variáveis só va
 - **Restauração:** o Neon Free guarda 6 h de histórico (restore instantâneo pelo console). O dump
   diário cifrado entra na Fase 6.
 
+## E-mails
+
+- **Ver a fila:** `select kind, recipient, status, attempts, last_error, created_at from email_outbox order by created_at desc limit 20;`
+  (a fila não guarda nome, e-mail nem endereço, então dá para consultar sem expor dados).
+- **Status:** `pendente` (na fila ou aguardando nova tentativa), `enviado`, `falhou` (6 tentativas
+  ou erro permanente; `last_error` mostra só o código HTTP) e `descartado` (sem destinatário,
+  agendamento inativo ou mais de 72 h).
+- **Reenviar um que falhou** (depois de corrigir a causa, por exemplo a chave do Resend):
+  `update email_outbox set status = 'pendente', attempts = 0, next_attempt_at = now() where id = '…';`.
+  Ele sai na próxima ação que dispare envio (a varredura automática entra na Fase 6).
+- **Sem `RESEND_API_KEY`** em preview/produção, os e-mails esperam na fila. Em local e nos testes
+  E2E, eles são gravados em `.emails/` (abra o `.html` no navegador).
+- **Domínio:** no Resend, verifique `luisasilvaramos.com.br` e crie os registros SPF, DKIM e DMARC
+  que ele indicar, no DNS do domínio.
+
 ## Testes de banco na sua máquina (opcional)
 
 Precisa de Docker:

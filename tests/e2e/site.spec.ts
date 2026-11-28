@@ -145,6 +145,8 @@ test.describe('Site público', () => {
   })
 
   test('acessibilidade (axe) com lightbox aberto', async ({ page }) => {
+    // Without this, axe can measure contrast mid fade-in (semi-transparent text).
+    await page.emulateMedia({ reducedMotion: 'reduce' })
     await page.goto('/')
     await page
       .getByRole('button', { name: 'Ampliar foto 02, Social' })

@@ -287,8 +287,50 @@ export const bookingEvents = pgTable(
   (t) => [index('booking_events_booking_idx').on(t.bookingId, t.createdAt)],
 )
 
+export const emailStatus = pgEnum('email_status', ['pendente', 'enviado', 'falhou', 'descartado'])
+
+/**
+ * Transactional e-mail outbox (docs/adr/0006-email.md). Rows are written in the
+ * same transaction as the change they announce, then delivered right after the
+ * response and retried with backoff. No personal data is stored here: the
+ * message is rendered at send time from the booking itself, and "Minha agenda"
+ * links are minted at send time, so no usable token ever sits in the database.
+ */
+export const emailOutbox = pgTable(
+  'email_outbox',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    kind: text('kind').notNull(),
+    /** 'cliente' (booking's customer) or 'luisa' (EMAIL_ADMIN_NOTIFY). */
+    recipient: text('recipient').notNull(),
+    bookingId: uuid('booking_id').references(() => bookings.id),
+    customerId: uuid('customer_id').references(() => customers.id),
+    /** Non-personal details needed to render (e.g. previous date of a reschedule). */
+    data: jsonb('data').notNull().default({}),
+    /** Prevents duplicates when the same change is replayed. */
+    dedupeKey: text('dedupe_key').notNull().unique(),
+    status: emailStatus('status').notNull().default('pendente'),
+    attempts: integer('attempts').notNull().default(0),
+    nextAttemptAt: timestamp('next_attempt_at', { withTimezone: true }).notNull().defaultNow(),
+    lockedUntil: timestamp('locked_until', { withTimezone: true }),
+    lastError: text('last_error'),
+    providerMessageId: text('provider_message_id'),
+    sentAt: timestamp('sent_at', { withTimezone: true }),
+    createdAt: timestamps.createdAt,
+  },
+  (t) => [
+    check('email_outbox_recipient_ck', sql`${t.recipient} in ('cliente', 'luisa')`),
+    check('email_outbox_target_ck', sql`${t.bookingId} is not null or ${t.customerId} is not null`),
+    index('email_outbox_due_idx')
+      .on(t.nextAttemptAt)
+      .where(sql`${t.status} = 'pendente'`),
+    index('email_outbox_customer_idx').on(t.customerId, t.createdAt),
+  ],
+)
+
 export type Service = typeof services.$inferSelect
 export type Booking = typeof bookings.$inferSelect
 export type ScheduleSettingsRow = typeof scheduleSettings.$inferSelect
 export type BusinessHoursRow = typeof businessHours.$inferSelect
 export type Block = typeof blocks.$inferSelect
+export type EmailOutboxRow = typeof emailOutbox.$inferSelect
