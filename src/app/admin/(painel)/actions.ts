@@ -1,5 +1,6 @@
 'use server'
 
+import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
 
@@ -17,6 +18,7 @@ import {
   type AdminBookingInput,
 } from '@/server/admin/manage'
 import { anonymizeCustomer, saveCustomerNotes } from '@/server/admin/customers'
+import { saveBaseAddress, saveHours, saveRules, saveService } from '@/server/admin/settings'
 import { quoteForAddress } from '@/server/booking/quote'
 import { getCepLookup, getKeyRing, getRouteProvider, getSigningSecret } from '@/server/runtime'
 import {
@@ -370,4 +372,125 @@ export async function forgetCustomerAction(
     throw error
   }
   redirect(`/admin/clientes/${customerId}?feito=removida`)
+}
+
+// ── 5c: settings ────────────────────────────────────────────────────────────
+
+/** "1.234,56" / "200" / "R$ 30,00" → cents. */
+function parseMoney(value: FormDataEntryValue | null): number {
+  const clean = String(value ?? '')
+    .replace(/[^\d,.-]/g, '')
+    .replace(/\.(?=\d{3}(\D|$))/g, '')
+    .replace(',', '.')
+  const n = Math.round(Number(clean) * 100)
+  return Number.isFinite(n) ? n : -1
+}
+
+const zodMessage = (error: z.ZodError) => error.issues[0]?.message ?? 'Confira os campos.'
+
+export async function serviceAction(
+  serviceId: number | null,
+  _prev: FormState,
+  form: FormData,
+): Promise<FormState> {
+  const deps = await actorDeps()
+  try {
+    await saveService(
+      getDb(),
+      serviceId,
+      {
+        name: String(form.get('name') ?? ''),
+        category: String(form.get('category') ?? ''),
+        durationMin: Number(form.get('durationMin')),
+        priceCents: parseMoney(form.get('price')),
+        description: String(form.get('description') ?? ''),
+        active: form.get('active') === 'on',
+        sortOrder: Number(form.get('sortOrder') ?? 0),
+      },
+      deps,
+    )
+  } catch (error) {
+    if (error instanceof z.ZodError) return { error: zodMessage(error) }
+    throw error
+  }
+  revalidatePath('/admin/ajustes')
+  return { ok: serviceId ? 'Serviço salvo.' : 'Serviço criado.' }
+}
+
+export async function hoursAction(_prev: FormState, form: FormData): Promise<FormState> {
+  const deps = await actorDeps()
+  try {
+    await saveHours(
+      getDb(),
+      Array.from({ length: 7 }, (_, weekday) => ({
+        weekday,
+        isOpen: form.get(`open-${weekday}`) === 'on',
+        opensAt: String(form.get(`from-${weekday}`) ?? '08:00'),
+        closesAt: String(form.get(`to-${weekday}`) ?? '19:00'),
+      })),
+      deps,
+    )
+  } catch (error) {
+    if (error instanceof z.ZodError) return { error: zodMessage(error) }
+    throw error
+  }
+  return { ok: 'Horários salvos.' }
+}
+
+export async function rulesAction(_prev: FormState, form: FormData): Promise<FormState> {
+  const deps = await actorDeps()
+  const n = (k: string) => Number(form.get(k))
+  try {
+    await saveRules(
+      getDb(),
+      {
+        manualConfirmation: form.get('manualConfirmation') === 'on',
+        bookingsPaused: form.get('bookingsPaused') === 'on',
+        pendingExpiryHours: n('pendingExpiryHours'),
+        minNoticeHours: n('minNoticeHours'),
+        horizonDays: n('horizonDays'),
+        cancelWindowHours: n('cancelWindowHours'),
+        bufferMin: n('bufferMin'),
+        slotStepMin: n('slotStepMin'),
+        lunchEnabled: form.get('lunchEnabled') === 'on',
+        lunchStart: String(form.get('lunchStart') ?? '12:30'),
+        lunchEnd: String(form.get('lunchEnd') ?? '13:30'),
+        readyBeforeEventMin: n('readyBeforeEventMin'),
+        recommendedMarginMin: n('recommendedMarginMin'),
+        maxPendingPerContact: n('maxPendingPerContact'),
+        travelMinFeeCents: parseMoney(form.get('travelMinFee')),
+        travelPerKmCents: parseMoney(form.get('travelPerKm')),
+        travelMaxRadiusKm: n('travelMaxRadiusKm'),
+        travelSafetyFactor: Number(
+          String(form.get('travelSafetyFactor') ?? '1.3').replace(',', '.'),
+        ),
+      },
+      deps,
+    )
+  } catch (error) {
+    if (error instanceof z.ZodError) return { error: zodMessage(error) }
+    throw error
+  }
+  return { ok: 'Regras salvas.' }
+}
+
+export async function baseAddressAction(_prev: FormState, form: FormData): Promise<FormState> {
+  const deps = await actorDeps()
+  const cep = String(form.get('cep') ?? '').replace(/\D/g, '')
+  if (cep.length !== 8) return { error: 'Informe um CEP com 8 dígitos.' }
+  const r = await saveBaseAddress(
+    getDb(),
+    { cep, number: String(form.get('number') ?? '') },
+    { ...deps, keyRing: getKeyRing(), lookup: getCepLookup() },
+  )
+  if (!r.ok) {
+    return {
+      error:
+        r.reason === 'cep-not-found'
+          ? 'CEP não encontrado.'
+          : 'Esse CEP não tem localização no serviço de CEP. Tente o CEP de uma rua próxima.',
+    }
+  }
+  revalidatePath('/admin/ajustes')
+  return { ok: `Endereço de saída salvo: ${r.address}` }
 }

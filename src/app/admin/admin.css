@@ -1765,3 +1765,55 @@ a.adm-ev:focus-visible {
   border-radius: 16px;
   border: 1px dashed var(--color-line-strong);
 }
+
+/* ───────── Settings ───────── */
+.adm-seg-wrap {
+  flex-wrap: wrap;
+  align-self: flex-start;
+}
+.adm-panel[id] {
+  scroll-margin-top: 90px;
+}
+.adm-panel.adm-pad {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.adm-disclosure {
+  border-radius: 14px;
+  background: var(--color-cream);
+}
+.adm-disclosure summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  min-height: 52px;
+  cursor: pointer;
+  list-style: none;
+}
+.adm-disclosure summary::-webkit-details-marker {
+  display: none;
+}
+.adm-disclosure-body {
+  padding: 4px 14px 16px;
+}
+.adm-hours {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.adm-hours-row {
+  margin: 0;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--color-cream);
+  display: grid;
+  grid-template-columns: minmax(110px, 1fr) minmax(0, 120px) auto minmax(0, 120px);
+  align-items: center;
+  gap: 8px;
+}
+.adm-hours-row .adm-field input {
+  background: #fff;
+}
