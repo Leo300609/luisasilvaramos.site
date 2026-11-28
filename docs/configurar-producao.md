@@ -42,39 +42,42 @@ node -e "console.log(require('crypto').randomBytes(48).toString('base64'))"
 > **`ENC_KEYS` não pode ser perdida nem trocada sem rotação:** sem ela, endereços e observações
 > cifrados ficam ilegíveis. Guarde uma cópia no gerenciador de senhas.
 
-## 4. Migrações do banco
+## 4. Migrações do banco e contas do painel
 
-GitHub → repositório → _Settings → Secrets and variables → Actions → New repository secret_:
-`DATABASE_MIGRATION_URL` = string do Neon **sem pooler**. Depois, no seu computador, com o projeto
-atualizado:
+No seu computador, no PowerShell, dentro da pasta do projeto atualizado (`git pull`). As variáveis
+abaixo valem **só para esta janela** do terminal; feche-a ao terminar.
 
-```bash
+```powershell
+$env:DATABASE_MIGRATION_URL = "<string do Neon SEM pooler>"
+$env:DATABASE_URL = "<string do Neon SEM pooler>"
+```
+
+```powershell
 npm.cmd run db:migrate
 ```
 
-(com `DATABASE_MIGRATION_URL` definida no terminal só durante o comando) e, uma vez:
-
-```bash
+```powershell
 npm.cmd run db:seed
 ```
 
-## 5. Contas do painel
+Crie a conta da Luísa (a senha é digitada sem aparecer na tela):
 
-Ainda no seu computador, apontando para o banco de produção:
-
-```bash
+```powershell
 npm.cmd run admin -- criar --email luisa.silva.ramos@gmail.com --nome "Luísa Silva Ramos"
 ```
 
 Repita com o seu e-mail para a conta de emergência (P28). No primeiro acesso a `/admin`, cada pessoa
 escaneia o QR code com o app autenticador e guarda os 10 códigos de recuperação.
 
-## 6. Ajustes iniciais (no painel)
+Para as próximas versões, cadastre também no GitHub (_Settings → Secrets and variables → Actions →
+New repository secret_) o `DATABASE_MIGRATION_URL`, para as migrações rodarem sem o seu computador.
+
+## 5. Ajustes iniciais (no painel)
 
 Em **Ajustes**: endereço de saída (CEP e número), serviços e preços, horários da semana e regras.
 Sem o endereço de saída, o agendamento online fica indisponível.
 
-## 7. Publicar
+## 6. Publicar
 
 Faça o merge do pull request de release. A Netlify publica uma vez (15 créditos). Depois, confira:
 
