@@ -7,11 +7,12 @@
  *   the same row twice), renders them from current data and sends. Failures
  *   are retried with exponential backoff; permanent ones stop at once.
  */
-import { and, eq, gte, inArray, sql } from 'drizzle-orm'
+import { and, count, eq, gte, inArray, sql } from 'drizzle-orm'
 
 import { whatsappLink } from '@/lib/contact'
 
-import type { KeyRing } from '../crypto/fields'
+import { decryptField, type KeyRing } from '../crypto/fields'
+import { loadAgenda } from '../admin/agenda'
 import * as schema from '../db/schema'
 import { getClientBooking, type ClientBookingView } from '../booking/manage'
 import { issueToken, TOKEN_VALID_AFTER_APPOINTMENT_DAYS } from '../booking/tokens'
@@ -112,6 +113,50 @@ async function compose(
   }
 
   const to = row.recipient === 'luisa' ? deps.adminEmail : null
+
+  if (row.kind === 'daily_summary') {
+    if (!to) throw new Discard('no-admin-address')
+    const date = String((row.data as { date?: string }).date ?? '')
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Discard('bad-date')
+    const { items } = await loadAgenda(db, date, date)
+    const rows = await Promise.all(
+      items
+        .filter((i) => i.status === 'confirmado')
+        .map(async (i) => {
+          const [raw] = await db
+            .select({
+              address: schema.bookings.addressEnc,
+              allergy: schema.bookings.allergyNotesEnc,
+            })
+            .from(schema.bookings)
+            .where(eq(schema.bookings.id, i.id))
+          return {
+            time: minutesToTime(i.startMin),
+            leaveAt: minutesToTime(i.busyStartMin),
+            name: i.customerName,
+            serviceName: i.serviceName,
+            address: raw?.address
+              ? decryptField(raw.address, deps.keyRing, 'bookings.address')
+              : '',
+            eventStart: i.eventStart,
+            hasAllergyNotes: Boolean(raw?.allergy),
+          }
+        }),
+    )
+    const [pending] = await db
+      .select({ n: count() })
+      .from(schema.bookings)
+      .where(eq(schema.bookings.status, 'pendente'))
+    return {
+      to,
+      email: t.adminDailySummary({
+        date,
+        items: rows,
+        pending: pending?.n ?? 0,
+        panelUrl: new URL('/admin', deps.siteUrl).toString(),
+      }),
+    }
+  }
   if (row.recipient === 'luisa' && !to) throw new Discard('no-admin-address')
 
   const whatsappUrl = whatsappLink()
@@ -186,7 +231,19 @@ async function compose(
           }),
         }
       case 'booking_declined':
+      case 'booking_expired':
         return { to: email, email: t.clientBookingDeclined(b, { customer, bookUrl, whatsappUrl }) }
+      case 'booking_reminder':
+        if (view.status !== 'confirmado') throw new Discard('not-confirmed')
+        if (new Date(view.startsAt) <= deps.now) throw new Discard('already-started')
+        return {
+          to: email,
+          email: t.clientReminder(b, {
+            customer,
+            link: await accessLink(db, deps, view),
+            whatsappUrl,
+          }),
+        }
       case 'booking_rescheduled':
         if (!['pendente', 'confirmado'].includes(view.status)) throw new Discard('not-active')
         return {

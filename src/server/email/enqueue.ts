@@ -10,6 +10,9 @@ export const EMAIL_KINDS = [
   'booking_confirmed',
   'booking_declined',
   'admin_password_reset',
+  'booking_reminder',
+  'booking_expired',
+  'daily_summary',
 ] as const
 export type EmailKind = (typeof EMAIL_KINDS)[number]
 export type Recipient = 'cliente' | 'luisa' | 'admin'

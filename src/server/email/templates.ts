@@ -242,6 +242,80 @@ export function adminPasswordReset(ctx: {
   })
 }
 
+export function clientReminder(
+  b: BookingSummary,
+  ctx: { customer: CustomerInfo; link: string; whatsappUrl: string },
+): RenderedEmail {
+  return renderEmail({
+    subject: `Lembrete: amanhã, ${b.time} · Maquiagem com a Luísa`,
+    preheader: `${b.serviceName} amanhã às ${b.time}.`,
+    heading: 'Até amanhã!',
+    blocks: [
+      {
+        type: 'p',
+        text: `Olá, ${firstName(ctx.customer.name)}! Passando para lembrar do seu horário.`,
+      },
+      { type: 'details', rows: [codeRow(b), ...whenRows(b)] },
+      {
+        type: 'note',
+        text: 'Esteja com o rosto limpo, sem maquiagem e com a pele hidratada. Se puder, separe um lugar com boa luz, perto de uma tomada.',
+      },
+      { type: 'button', href: ctx.link, label: 'Ver meu agendamento' },
+      { type: 'p', text: `Algum imprevisto? Fale comigo: ${ctx.whatsappUrl}` },
+    ],
+  })
+}
+
+export type SummaryItem = {
+  time: string
+  leaveAt: string
+  name: string
+  serviceName: string
+  address: string
+  eventStart: string | null
+  hasAllergyNotes: boolean
+}
+
+export function adminDailySummary(ctx: {
+  date: string
+  items: SummaryItem[]
+  pending: number
+  panelUrl: string
+}): RenderedEmail {
+  const blocks: Block[] = ctx.items.length
+    ? ctx.items.map((i): Block => ({
+        type: 'details',
+        rows: [
+          ['Horário', `${i.time} (sair às ${i.leaveAt})`],
+          ['Cliente', i.name],
+          ['Serviço', i.serviceName],
+          ['Local', i.address],
+          ...(i.eventStart ? [['Evento', i.eventStart] as [string, string]] : []),
+          ...(i.hasAllergyNotes
+            ? [['Atenção', 'Alergias informadas: veja no painel'] as [string, string]]
+            : []),
+        ],
+      }))
+    : [{ type: 'p', text: 'Nenhum atendimento hoje. Bom descanso!' }]
+  return renderEmail({
+    subject: `Sua agenda de hoje · ${formatDateShort(ctx.date)} · ${ctx.items.length} ${ctx.items.length === 1 ? 'atendimento' : 'atendimentos'}`,
+    preheader: ctx.items.length ? `Primeiro atendimento às ${ctx.items[0]!.time}.` : 'Dia livre.',
+    heading: 'Agenda de hoje',
+    blocks: [
+      ...blocks,
+      ...(ctx.pending
+        ? [
+            {
+              type: 'note',
+              text: `Você tem ${ctx.pending} ${ctx.pending === 1 ? 'pedido aguardando' : 'pedidos aguardando'} confirmação.`,
+            } as Block,
+          ]
+        : []),
+      { type: 'button', href: ctx.panelUrl, label: 'Abrir o painel' },
+    ],
+  })
+}
+
 // ── Luísa ────────────────────────────────────────────────────────────────────
 
 function customerRows(c: CustomerInfo): Array<[string, string]> {

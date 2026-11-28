@@ -54,6 +54,8 @@ export const serverEnvSchema = z
      * Generate: openssl rand -base64 48
      */
     AUTH_SECRET: z.string().min(32).optional(),
+    /** Bearer secret the Netlify scheduled function sends to /api/cron/hourly (≥ 32 chars). */
+    CRON_SECRET: z.string().min(32).optional(),
     /** Resend API key (Phase 4b). Without it, e-mails wait in the outbox. */
     RESEND_API_KEY: z
       .string()

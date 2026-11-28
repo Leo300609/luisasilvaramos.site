@@ -68,6 +68,14 @@ Environment variables_. Depois de mudar, faça um novo deploy (variáveis só va
 - **Bloqueio por tentativas:** depois de 5 senhas erradas, a conta espera 5 minutos. Não há como
   liberar antes, de propósito.
 
+## Tarefa de hora em hora
+
+- Roda sozinha em produção (Netlify Scheduled Functions → `/api/cron/hourly`). Precisa de
+  `CRON_SECRET` na Netlify.
+- **Últimas execuções:** `select started_at, ok, report from job_runs order by id desc limit 10;`.
+- **Rodar na hora** (por exemplo, em um preview):
+  `curl -X POST -H "Authorization: Bearer $CRON_SECRET" https://<site>/api/cron/hourly`.
+
 ## E-mails
 
 - **Ver a fila:** `select kind, recipient, status, attempts, last_error, created_at from email_outbox order by created_at desc limit 20;`

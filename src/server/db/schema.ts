@@ -415,6 +415,20 @@ export const emailOutbox = pgTable(
   ],
 )
 
+/** One row per scheduled-job run (monitoring; the lock is an advisory lock). */
+export const jobRuns = pgTable(
+  'job_runs',
+  {
+    id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
+    job: text('job').notNull(),
+    startedAt: timestamp('started_at', { withTimezone: true }).notNull(),
+    finishedAt: timestamp('finished_at', { withTimezone: true }),
+    ok: boolean('ok'),
+    report: jsonb('report').notNull().default({}),
+  },
+  (t) => [index('job_runs_job_idx').on(t.job, t.startedAt)],
+)
+
 export type Service = typeof services.$inferSelect
 export type Booking = typeof bookings.$inferSelect
 export type ScheduleSettingsRow = typeof scheduleSettings.$inferSelect
