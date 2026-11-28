@@ -1,6 +1,6 @@
 import Link from 'next/link'
 
-import { LsrMonogram } from '@/components/site/monograms'
+import { LsrLogo } from '@/components/site/monograms'
 
 /** Split screen of the access pages: brand on the left (top on mobile), card on the right. */
 export default function AccessLayout({ children }: { children: React.ReactNode }) {
@@ -10,7 +10,7 @@ export default function AccessLayout({ children }: { children: React.ReactNode }
         <div className="adm-auth-blob" aria-hidden="true" />
         <div className="adm-auth-ring" aria-hidden="true" />
         <span style={{ position: 'relative' }}>
-          <LsrMonogram size={72} tone="dark" title="Monograma LSR" />
+          <LsrLogo width={260} tone="dark" priority />
         </span>
         <span className="adm-auth-kicker">Área restrita · Painel da Luísa</span>
         <p className="adm-auth-quote">

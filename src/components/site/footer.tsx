@@ -2,7 +2,7 @@ import { SERVICE_AREA, TAGLINE } from '@/content/site'
 import { CONTACT, DEFAULT_WHATSAPP_MESSAGE, instagramUrl, whatsappLink } from '@/lib/contact'
 
 import { Instagram, Mail, WhatsApp } from './icons'
-import { LacMonogram, LsrMonogram } from './monograms'
+import { LacMonogram, LsrLogo } from './monograms'
 
 const NAV = [
   { href: '/#sobre', label: 'Sobre' },
@@ -19,9 +19,9 @@ export function SiteFooter() {
       <div className="lsr-container">
         <div className="lsr-footer-grid">
           <div className="lsr-footer-brand">
-            <LsrMonogram size={76} tone="dark" title="Monograma LSR" />
+            <LsrLogo width={220} tone="dark" />
             <p className="lsr-footer-title">
-              Luísa Silva Ramos <span>|</span> <em>Maquiadora Profissional</em>
+              <em>Maquiadora Profissional</em>
             </p>
             <p className="lsr-footer-tagline">{TAGLINE}</p>
           </div>

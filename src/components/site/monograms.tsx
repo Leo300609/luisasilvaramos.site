@@ -1,7 +1,18 @@
-/** Luísa's LSR monogram (header and footer) and the developer's LAC monogram. */
+/** Luísa's logo and LSR monogram, and the developer's LAC monogram. */
+
+import Image from 'next/image'
+
+import logoDourada from '@/assets/logo/logo-dourada.png'
+import logoTerra from '@/assets/logo/logo-terra.png'
+import monogramaDourado from '@/assets/logo/monograma-dourado.png'
+import monogramaTerra from '@/assets/logo/monograma-terra.png'
 
 type Tone = 'light' | 'dark'
 
+/**
+ * Luísa's LSR monogram, from her logo, recoloured to the site palette:
+ * gold-text on light backgrounds, gold on espresso. `size` is the height in px.
+ */
 export function LsrMonogram({
   size,
   tone = 'light',
@@ -12,62 +23,39 @@ export function LsrMonogram({
   /** When set, the monogram is announced; otherwise it is decorative. */
   title?: string
 }) {
-  const ink = tone === 'light' ? '#2B1D14' : '#FBF6EE'
-  const accent = tone === 'light' ? '#A67814' : '#F2B705'
-  const ring = tone === 'light' ? '#C9972B' : '#F2B705'
+  const src = tone === 'light' ? monogramaTerra : monogramaDourado
   return (
-    <svg
-      width={size}
+    <Image
+      src={src}
+      alt={title ?? ''}
       height={size}
-      viewBox="0 0 64 64"
-      fill="none"
-      {...(title ? { role: 'img', 'aria-label': title } : { 'aria-hidden': true })}
-    >
-      <ellipse
-        cx="32"
-        cy="32"
-        rx="29"
-        ry="12.5"
-        transform="rotate(-28 32 32)"
-        stroke={ring}
-        strokeWidth={tone === 'light' ? 1 : 0.9}
-      />
-      <text
-        x="15.5"
-        y="41"
-        textAnchor="middle"
-        fontFamily="var(--font-cormorant), Cormorant Garamond, serif"
-        fontSize="24"
-        fontWeight="300"
-        fill={ink}
-      >
-        L
-      </text>
-      <text
-        x="32"
-        y="45"
-        textAnchor="middle"
-        fontFamily="var(--font-cormorant), Cormorant Garamond, serif"
-        fontSize="36"
-        fontWeight="400"
-        fontStyle="italic"
-        fill={accent}
-      >
-        S
-      </text>
-      <text
-        x="48.5"
-        y="41"
-        textAnchor="middle"
-        fontFamily="var(--font-cormorant), Cormorant Garamond, serif"
-        fontSize="24"
-        fontWeight="300"
-        fill={ink}
-      >
-        R
-      </text>
-      <circle cx="57.6" cy="18.4" r="1.8" fill={ring} />
-    </svg>
+      width={Math.round((size * src.width) / src.height)}
+      style={{ maxWidth: '100%', height: 'auto' }}
+      {...(title ? {} : { 'aria-hidden': true })}
+    />
+  )
+}
+
+/** The full logo (ornaments, monogram and name). `width` in px. */
+export function LsrLogo({
+  width,
+  tone = 'light',
+  priority = false,
+}: {
+  width: number
+  tone?: Tone
+  priority?: boolean
+}) {
+  const src = tone === 'light' ? logoTerra : logoDourada
+  return (
+    <Image
+      src={src}
+      alt="Luísa Silva Ramos"
+      width={width}
+      height={Math.round((width * src.height) / src.width)}
+      style={{ maxWidth: '100%', height: 'auto' }}
+      priority={priority}
+    />
   )
 }
 

@@ -15,6 +15,8 @@ Todos ficam em `src/content/site.ts` (e, a partir da Fase 5, no painel):
 - [ ] **(conteúdo)** Preços e durações confirmados pela Luísa no painel
 - [ ] Link da assinatura "Desenvolvido por" (opcional)
 
+- [x] **(conteúdo)** Logo da Luísa aplicada (cores adaptadas: dourado no fundo escuro, terra no claro)
+
 ## Legal e LGPD
 
 - [ ] Identificação da fornecedora no site (Decreto 7.962/2013): MEI/CNPJ e endereço. Ver risco R6.1
