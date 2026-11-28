@@ -6,7 +6,7 @@
 para a maquiadora Luísa Silva Ramos.
 
 [![CI](https://github.com/Leo300609/luisasilvaramos.site/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Leo300609/luisasilvaramos.site/actions/workflows/ci.yml)
-[![Netlify](https://api.netlify.com/api/v1/badges/8cd2d57f-6c8f-44d5-ac90-4e600f18b92b/deploy-status)](https://app.netlify.com/projects/luisasilvaramos-site/deploys)
+[![Netlify](https://img.shields.io/badge/deploy-Netlify-00C7B7?logo=netlify&logoColor=white)](https://app.netlify.com/projects/effortless-meringue-dd2411/deploys)
 ![Next.js](https://img.shields.io/badge/Next.js-16-000000?logo=nextdotjs&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white)
