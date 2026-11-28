@@ -4,7 +4,7 @@
  * retention). Scheduled functions only run on the published production deploy.
  * Docs: docs/adr/0007-tarefas-agendadas.md, docs/runbook.md.
  */
-export default async () => {
+async function hourly() {
   const base = process.env.URL
   const secret = process.env.CRON_SECRET
   if (!base || !secret) {
@@ -18,5 +18,7 @@ export default async () => {
   })
   console.log(`hourly: HTTP ${response.status}`)
 }
+
+export default hourly
 
 export const config = { schedule: '@hourly' }
