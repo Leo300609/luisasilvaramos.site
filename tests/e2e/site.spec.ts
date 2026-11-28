@@ -216,3 +216,21 @@ test.describe('Agendar (provisório)', () => {
     expect(errors).toEqual([])
   })
 })
+
+test.describe('Política de privacidade', () => {
+  test('página acessível, ligada pelo rodapé e com os direitos da titular', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await page.goto('/')
+    await page
+      .getByRole('contentinfo')
+      .getByRole('link', { name: 'Política de privacidade' })
+      .click()
+    await expect(page).toHaveURL(/\/privacidade$/)
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Política de privacidade')
+    await expect(page.getByRole('heading', { name: 'Seus direitos' })).toBeVisible()
+    const results = await new AxeBuilder({ page })
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+      .analyze()
+    expect(results.violations).toEqual([])
+  })
+})

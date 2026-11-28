@@ -1,3 +1,4 @@
+import { LIMITS } from '@/server/http/rate-limit'
 import { z } from 'zod'
 
 import { createBooking, createBookingSchema } from '@/server/booking/create'
@@ -9,7 +10,7 @@ import { getDb } from '@/server/db/client'
 import { setBookingCookie } from '@/server/http/booking-cookie'
 import { badRequest, forbidden, isSameOrigin, json, unavailable } from '@/server/http/guards'
 import { log } from '@/lib/observability/log'
-import { bookingConfigured, getKeyRing, getSigningSecret } from '@/server/runtime'
+import { bookingConfigured, getKeyRing, getSigningSecret, limitRequest } from '@/server/runtime'
 import { addMinutes, localToInstant, timeToMinutes } from '@/server/scheduling/time'
 
 const body = createBookingSchema.omit({ travel: true, address: true, source: true }).extend({
@@ -31,6 +32,8 @@ const STATUS: Record<BookingError['code'], number> = {
 export async function POST(request: Request) {
   if (!isSameOrigin(request)) return forbidden()
   if (!bookingConfigured()) return unavailable()
+  const limited = await limitRequest(request, LIMITS.book)
+  if (limited) return limited
   const parsed = body.safeParse(await request.json().catch(() => null))
   if (!parsed.success) return badRequest(parsed.error.issues.map((i) => i.path.join('.')))
 

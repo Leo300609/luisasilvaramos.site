@@ -19,7 +19,8 @@
     "db:migrate": "tsx scripts/db-migrate.mts",
     "db:seed": "tsx scripts/db-seed.mts",
     "test:db": "vitest run --project db",
-    "db:set-base": "tsx scripts/set-base-location.mts"
+    "db:set-base": "tsx scripts/set-base-location.mts",
+    "admin": "tsx scripts/admin.mts"
   },
   "dependencies": {
     "@date-fns/tz": "^1.5.0",
@@ -30,6 +31,7 @@
     "react": "19.3.1",
     "react-dom": "19.3.1",
     "server-only": "^0.0.1",
+    "uqr": "0.1.3",
     "zod": "^4.6.7"
   },
   "devDependencies": {

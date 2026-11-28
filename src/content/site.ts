@@ -67,15 +67,13 @@ export const ABOUT_HIGHLIGHTS = [
 
 export const ABOUT_PARAGRAPHS = [
   'Sou a Luísa Silva Ramos, maquiadora profissional. Acredito que a maquiagem certa não esconde quem você é: ela realça a sua beleza natural e deixa você confiante para viver cada momento.',
-  // TODO(Leo): texto real da trajetória da Luísa.
-  '[Conte aqui a sua trajetória: há quanto tempo trabalha com maquiagem, cursos e especializações que fez e o que mais ama na profissão.]',
+  // A second paragraph about her career returns when the Luísa sends the text (removed by Leo).
 ] as const
 
 export const HERO_STATS = [
   // TODO(Leo): número real de clientes atendidas.
   { value: '+ de [X]', label: 'clientes atendidas' },
-  // TODO(Leo): cidade-base de atendimento.
-  { value: '[Cidade]', label: 'e região' },
+  { value: 'Suzano', label: 'e Alto Tietê' },
 ] as const
 
 export type PortfolioItem = {
@@ -145,8 +143,7 @@ export const TESTIMONIALS: readonly Testimonial[] = [
 /** Event types offered in the contact form (Artística and Aulas removed, Phase 0 P5). */
 export const EVENT_TYPES = ['Maquiagem social', 'Noiva', 'Formatura', 'Evento ou festa'] as const
 
-// TODO(Leo): cidade / região de atendimento.
-export const SERVICE_AREA = '[Cidade / região de atendimento]'
+export const SERVICE_AREA = 'Suzano / Alto Tietê'
 
 export const TAGLINE =
   'Maquiagem que valoriza o que você tem de mais bonito, para o seu dia mais especial.'

@@ -7,11 +7,12 @@
  *   the same row twice), renders them from current data and sends. Failures
  *   are retried with exponential backoff; permanent ones stop at once.
  */
-import { and, eq, gte, inArray, sql } from 'drizzle-orm'
+import { and, count, eq, gte, inArray, sql } from 'drizzle-orm'
 
 import { whatsappLink } from '@/lib/contact'
 
-import type { KeyRing } from '../crypto/fields'
+import { decryptField, type KeyRing } from '../crypto/fields'
+import { loadAgenda } from '../admin/agenda'
 import * as schema from '../db/schema'
 import { getClientBooking, type ClientBookingView } from '../booking/manage'
 import { issueToken, TOKEN_VALID_AFTER_APPOINTMENT_DAYS } from '../booking/tokens'
@@ -21,6 +22,7 @@ import { formatDateLong } from '@/lib/format'
 import type { RenderedEmail } from './layout'
 import { MailerError, type Mailer } from './mailer'
 import * as t from './templates'
+import { issuePasswordResetToken, POLICY } from '../auth/service'
 
 export { enqueueEmail, EMAIL_KINDS, type EmailKind, type Recipient } from './enqueue'
 
@@ -87,7 +89,74 @@ async function compose(
   row: Row,
   deps: DeliveryDeps,
 ): Promise<{ to: string; email: RenderedEmail }> {
+  if (row.recipient === 'admin') {
+    if (row.kind !== 'admin_password_reset' || !row.adminUserId)
+      throw new Discard('bad-admin-email')
+    const [user] = await db
+      .select({
+        email: schema.adminUsers.email,
+        name: schema.adminUsers.name,
+        disabled: schema.adminUsers.disabledAt,
+      })
+      .from(schema.adminUsers)
+      .where(eq(schema.adminUsers.id, row.adminUserId))
+    if (!user || user.disabled) throw new Discard('admin-gone')
+    const token = await issuePasswordResetToken(db, row.adminUserId, deps.now)
+    return {
+      to: user.email,
+      email: t.adminPasswordReset({
+        name: user.name,
+        link: new URL(`/admin/r/${token}`, deps.siteUrl).toString(),
+        validMinutes: POLICY.resetTokenMin,
+      }),
+    }
+  }
+
   const to = row.recipient === 'luisa' ? deps.adminEmail : null
+
+  if (row.kind === 'daily_summary') {
+    if (!to) throw new Discard('no-admin-address')
+    const date = String((row.data as { date?: string }).date ?? '')
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) throw new Discard('bad-date')
+    const { items } = await loadAgenda(db, date, date)
+    const rows = await Promise.all(
+      items
+        .filter((i) => i.status === 'confirmado')
+        .map(async (i) => {
+          const [raw] = await db
+            .select({
+              address: schema.bookings.addressEnc,
+              allergy: schema.bookings.allergyNotesEnc,
+            })
+            .from(schema.bookings)
+            .where(eq(schema.bookings.id, i.id))
+          return {
+            time: minutesToTime(i.startMin),
+            leaveAt: minutesToTime(i.busyStartMin),
+            name: i.customerName,
+            serviceName: i.serviceName,
+            address: raw?.address
+              ? decryptField(raw.address, deps.keyRing, 'bookings.address')
+              : '',
+            eventStart: i.eventStart,
+            hasAllergyNotes: Boolean(raw?.allergy),
+          }
+        }),
+    )
+    const [pending] = await db
+      .select({ n: count() })
+      .from(schema.bookings)
+      .where(eq(schema.bookings.status, 'pendente'))
+    return {
+      to,
+      email: t.adminDailySummary({
+        date,
+        items: rows,
+        pending: pending?.n ?? 0,
+        panelUrl: new URL('/admin', deps.siteUrl).toString(),
+      }),
+    }
+  }
   if (row.recipient === 'luisa' && !to) throw new Discard('no-admin-address')
 
   const whatsappUrl = whatsappLink()
@@ -134,6 +203,8 @@ async function compose(
 
   if (row.recipient === 'cliente') {
     const email = customer.email
+    // Bookings made in the panel may have no e-mail (phone-only clients).
+    if (!email) throw new Discard('no-client-email')
     switch (row.kind) {
       case 'booking_created':
         if (!['pendente', 'confirmado'].includes(view.status)) throw new Discard('not-active')
@@ -148,6 +219,31 @@ async function compose(
         }
       case 'booking_cancelled':
         return { to: email, email: t.clientBookingCancelled(b, { customer, bookUrl, whatsappUrl }) }
+      case 'booking_confirmed':
+        if (view.status !== 'confirmado') throw new Discard('not-confirmed')
+        return {
+          to: email,
+          email: t.clientBookingCreated(b, {
+            customer,
+            link: await accessLink(db, deps, view),
+            whatsappUrl,
+            pendingExpiryHours: 0,
+          }),
+        }
+      case 'booking_declined':
+      case 'booking_expired':
+        return { to: email, email: t.clientBookingDeclined(b, { customer, bookUrl, whatsappUrl }) }
+      case 'booking_reminder':
+        if (view.status !== 'confirmado') throw new Discard('not-confirmed')
+        if (new Date(view.startsAt) <= deps.now) throw new Discard('already-started')
+        return {
+          to: email,
+          email: t.clientReminder(b, {
+            customer,
+            link: await accessLink(db, deps, view),
+            whatsappUrl,
+          }),
+        }
       case 'booking_rescheduled':
         if (!['pendente', 'confirmado'].includes(view.status)) throw new Discard('not-active')
         return {

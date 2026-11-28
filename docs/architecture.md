@@ -121,3 +121,8 @@ sequenceDiagram
 
 Teste de concorrência: 10 conexões paralelas pedindo o mesmo horário resultam em exatamente 1
 agendamento (`tests/db/concurrency.test.ts`).
+
+## Desempenho: decisões registradas
+
+- **`experimental.inlineCss` foi testado e descartado (Fase 7).** Ele ganharia cerca de 300 ms de LCP no celular (sem CSS bloqueando a renderização). Porém o `<style>` gerado vem **sem nonce**, e a CSP das áreas com nonce (`/agendar`, `/admin`) bloqueia esse CSS: a página de login fica sem estilo. Liberar `<style>` sem nonce enfraqueceria a CSP do painel. A segurança vence.
+- O LCP da página inicial é a foto do topo (34 KB, `priority`). Medição local com Lighthouse em celular simulado: nota de 82 a 88 conforme a execução, LCP de 3,2 a 3,8 s, CLS 0 e TBT de cerca de 300 ms.

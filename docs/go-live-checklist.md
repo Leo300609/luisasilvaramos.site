@@ -7,18 +7,20 @@
 Todos ficam em `src/content/site.ts` (e, a partir da Fase 5, no painel):
 
 - [ ] **(conteúdo)** Número real de clientes atendidas (hero: "+ de [X]")
-- [ ] **(conteúdo)** Cidade/região de atendimento (hero, contato, rodapé)
-- [ ] **(conteúdo)** Texto da trajetória da Luísa (seção Sobre)
+- [x] **(conteúdo)** Cidade/região de atendimento: Suzano / Alto Tietê
+- [ ] **(conteúdo)** Texto da trajetória da Luísa (seção Sobre; o parágrafo provisório foi retirado)
 - [ ] **(conteúdo)** 9 fotos do portfólio, com **autorização de uso de imagem** de cada cliente
 - [ ] **(conteúdo)** 3 depoimentos reais, com autorização (nome e mês/ano)
 - [ ] **(conteúdo)** Instagram (os links aparecem sozinhos quando o @ for preenchido)
 - [ ] **(conteúdo)** Preços e durações confirmados pela Luísa no painel
 - [ ] Link da assinatura "Desenvolvido por" (opcional)
 
+- [x] **(conteúdo)** Logo da Luísa aplicada (cores adaptadas: dourado no fundo escuro, terra no claro)
+
 ## Legal e LGPD
 
 - [ ] Identificação da fornecedora no site (Decreto 7.962/2013): MEI/CNPJ e endereço. Ver risco R6.1
-- [ ] Política de privacidade, termos de uso e política de cancelamento revisados por advogado
+- [ ] Política de privacidade (`/privacidade`, texto feito a partir do que o sistema faz), termos de uso e política de cancelamento revisados por advogado
 - [ ] Modelo do contrato revisado por advogado
 
 ## Infraestrutura
@@ -31,4 +33,6 @@ Todos ficam em `src/content/site.ts` (e, a partir da Fase 5, no painel):
 - [ ] Monitor de uptime externo e alertas
 - [ ] Backup restaurado com sucesso pelo menos uma vez
 - [ ] Contas (GitHub, Netlify, Neon, Resend) com 2FA
+- [ ] `AUTH_SECRET` cadastrado na Netlify (produção) e conta do painel criada para a Luísa (`npm run admin -- criar`), com 2FA ativo e códigos de recuperação guardados
+- [ ] Conta de emergência do Leo (P28) criada e testada
 - [ ] Teste real de ponta a ponta (agendamento, e-mail, painel)

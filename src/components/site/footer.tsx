@@ -2,14 +2,14 @@ import { SERVICE_AREA, TAGLINE } from '@/content/site'
 import { CONTACT, DEFAULT_WHATSAPP_MESSAGE, instagramUrl, whatsappLink } from '@/lib/contact'
 
 import { Instagram, Mail, WhatsApp } from './icons'
-import { LacMonogram, LsrMonogram } from './monograms'
+import { LacMonogram, LsrLogo } from './monograms'
 
 const NAV = [
-  { href: '#sobre', label: 'Sobre' },
-  { href: '#servicos', label: 'Serviços' },
-  { href: '#portfolio', label: 'Portfólio' },
-  { href: '#depoimentos', label: 'Depoimentos' },
-  { href: '#contato', label: 'Contato' },
+  { href: '/#sobre', label: 'Sobre' },
+  { href: '/#servicos', label: 'Serviços' },
+  { href: '/#portfolio', label: 'Portfólio' },
+  { href: '/#depoimentos', label: 'Depoimentos' },
+  { href: '/#contato', label: 'Contato' },
 ] as const
 
 export function SiteFooter() {
@@ -19,9 +19,9 @@ export function SiteFooter() {
       <div className="lsr-container">
         <div className="lsr-footer-grid">
           <div className="lsr-footer-brand">
-            <LsrMonogram size={76} tone="dark" title="Monograma LSR" />
+            <LsrLogo width={220} tone="dark" />
             <p className="lsr-footer-title">
-              Luísa Silva Ramos <span>|</span> <em>Maquiadora Profissional</em>
+              <em>Maquiadora Profissional</em>
             </p>
             <p className="lsr-footer-tagline">{TAGLINE}</p>
           </div>
@@ -77,7 +77,10 @@ export function SiteFooter() {
         </div>
 
         <div className="lsr-footer-bottom">
-          <p>© {year} Luísa Silva Ramos. Todos os direitos reservados.</p>
+          <p className="lsr-footer-legal">
+            © {year} Luísa Silva Ramos. Todos os direitos reservados. ·{' '}
+            <a href="/privacidade">Política de privacidade</a>
+          </p>
           {/* TODO(Leo): link da assinatura, quando houver um site do desenvolvedor. */}
           <p className="lsr-signature-dev">
             <span>Desenvolvido por</span>

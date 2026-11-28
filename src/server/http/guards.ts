@@ -28,3 +28,21 @@ export const forbidden = () => json({ error: 'forbidden' }, { status: 403 })
 export const badRequest = (detail?: unknown) =>
   json({ error: 'invalid-input', detail }, { status: 400 })
 export const unavailable = () => json({ error: 'not-configured' }, { status: 503 })
+
+/** Client IP as seen by Netlify (or the first X-Forwarded-For hop elsewhere). */
+export function clientIp(request: Request): string {
+  return (
+    request.headers.get('x-nf-client-connection-ip') ??
+    request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
+    'unknown'
+  )
+}
+
+export const tooManyRequests = (retryAfterSec: number) =>
+  json(
+    {
+      error: 'rate-limited',
+      message: 'Muitas tentativas. Aguarde alguns minutos e tente de novo.',
+    },
+    { status: 429, headers: { 'Retry-After': String(retryAfterSec) } },
+  )

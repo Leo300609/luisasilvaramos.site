@@ -18,6 +18,14 @@ export function businessJsonLd(siteUrl: string) {
     telephone: `+${CONTACT.whatsappE164}`,
     email: CONTACT.email,
     founder: { '@type': 'Person', name: 'Luísa Silva Ramos', jobTitle: 'Maquiadora profissional' },
+    areaServed: [
+      {
+        '@type': 'City',
+        name: 'Suzano',
+        containedInPlace: { '@type': 'State', name: 'São Paulo' },
+      },
+      { '@type': 'AdministrativeArea', name: 'Alto Tietê' },
+    ],
     sameAs: CONTACT.instagramHandle ? [instagramUrl(CONTACT.instagramHandle)] : undefined,
     hasOfferCatalog: {
       '@type': 'OfferCatalog',

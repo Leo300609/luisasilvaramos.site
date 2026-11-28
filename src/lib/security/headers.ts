@@ -91,7 +91,7 @@ export const NONCE_PATH_PREFIXES = ['/agendar', '/admin', '/a/'] as const
 export const NOINDEX_PATH_PREFIXES = ['/admin', '/agendar/minha-agenda', '/a/'] as const
 
 /** Paths whose URL may carry a secret token: never leak it through the Referer header. */
-export const NO_REFERRER_PATH_PREFIXES = ['/a/'] as const
+export const NO_REFERRER_PATH_PREFIXES = ['/a/', '/admin/r/'] as const
 
 export function matchesPrefix(pathname: string, prefixes: readonly string[]): boolean {
   return prefixes.some((prefix) =>

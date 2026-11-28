@@ -6,7 +6,10 @@ import { env } from '@/env/server'
 
 import { fakeCepLookup, lookupCep, type CepLookup } from './booking/quote'
 import { parseKeyRing, type KeyRing } from './crypto/fields'
+import { getDb } from './db/client'
 import { FileMailer, ResendMailer, type Mailer } from './email/mailer'
+import { clientIp, tooManyRequests } from './http/guards'
+import { hit, type Limit } from './http/rate-limit'
 import type { DeliveryDeps } from './email/outbox'
 import { EstimatedRouteProvider, type RouteProvider } from './scheduling/travel'
 
@@ -72,5 +75,31 @@ export function emailDeliveryDeps(now: Date): DeliveryDeps {
     adminEmail: env.EMAIL_ADMIN_NOTIFY ?? null,
     replyTo: env.EMAIL_REPLY_TO ?? null,
     now,
+  }
+}
+
+/** True when the admin panel can run (database, encryption and AUTH_SECRET). */
+export function adminConfigured(): boolean {
+  return Boolean(env.DATABASE_URL && env.ENC_KEYS && env.ENC_ACTIVE_KEY && env.AUTH_SECRET)
+}
+
+export function getAuthSecret(): string {
+  if (!env.AUTH_SECRET) throw new Error('AUTH_SECRET is not configured.')
+  return env.AUTH_SECRET
+}
+
+/**
+ * Applies a public-API limit for this request's IP. Returns a 429 Response when
+ * exceeded, or null to continue. Fails open if the limiter itself errors: a
+ * database hiccup must not take bookings down.
+ */
+export async function limitRequest(request: Request, limit: Limit): Promise<Response | null> {
+  // E2E runs book dozens of times from one IP; the limiter itself is covered by DB tests.
+  if (process.env.FAKE_EXTERNAL_SERVICES === '1' && env.APP_ENV !== 'production') return null
+  try {
+    const r = await hit(getDb(), limit, clientIp(request), getSigningSecret(), new Date())
+    return r.ok ? null : tooManyRequests(r.retryAfterSec)
+  } catch {
+    return null
   }
 }

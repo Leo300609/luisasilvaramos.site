@@ -1926,3 +1926,65 @@ a.lsr-contact-item:hover strong {
     }
   }
 }
+
+/* ───────── Legal pages (privacidade) ───────── */
+.lsr-legal {
+  padding: 120px 0 80px;
+  background: var(--color-cream);
+}
+.lsr-legal-body {
+  max-width: 760px;
+  font-size: 17px;
+  line-height: 1.7;
+  color: var(--color-brown);
+}
+.lsr-legal-body h1 {
+  margin: 8px 0 4px;
+  font-family: var(--font-display);
+  font-size: clamp(40px, 6vw, 60px);
+  font-weight: 300;
+  line-height: 1.1;
+  color: var(--color-espresso);
+}
+.lsr-legal-body h2 {
+  margin: 40px 0 12px;
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 500;
+  color: var(--color-espresso);
+}
+.lsr-legal-body strong {
+  color: var(--color-espresso);
+  font-weight: 500;
+}
+.lsr-legal-body ul {
+  padding-left: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.lsr .lsr-legal-body a {
+  color: var(--color-gold-text);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.lsr-legal-kicker {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--color-gold-text);
+}
+.lsr-legal-updated {
+  margin: 0 0 24px;
+  font-size: 14px;
+}
+.lsr-legal-back {
+  margin-top: 48px;
+}
+.lsr .lsr-footer-legal a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
