@@ -27,6 +27,13 @@ export async function resetData(db: TestDb) {
     sql`truncate rate_limits, job_runs, audit_log, auth_attempts, admin_password_resets, admin_sessions, email_outbox, admin_users, booking_tokens, booking_events, bookings, customers, blocks, services restart identity cascade`,
   )
   await db.execute(sql`alter sequence booking_code_seq restart with 1`)
+  // Back to the migration defaults: some tests edit settings and weekly hours.
+  await db.execute(
+    sql`delete from schedule_settings; insert into schedule_settings (id) values (1)`,
+  )
+  await db.execute(
+    sql`update business_hours set is_open = weekday between 2 and 6, opens_at = '08:00', closes_at = '19:00'`,
+  )
   await db.update(schema.scheduleSettings).set({
     bufferMin: 15,
     lunchEnabled: true,

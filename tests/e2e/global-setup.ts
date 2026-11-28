@@ -24,7 +24,7 @@ export default async function globalSetup() {
   await client.connect()
   try {
     await client.query(
-      'truncate auth_attempts, admin_password_resets, admin_sessions, email_outbox, booking_tokens, booking_events, bookings, customers restart identity cascade; alter sequence booking_code_seq restart',
+      'truncate rate_limits, job_runs, blocks, auth_attempts, admin_password_resets, admin_sessions, email_outbox, booking_tokens, booking_events, bookings, customers restart identity cascade; alter sequence booking_code_seq restart',
     )
     const hash = await hashPassword(E2E_ADMIN_PASSWORD)
     for (const email of Object.values(E2E_ADMINS)) {

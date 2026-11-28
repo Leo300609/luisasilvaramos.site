@@ -55,6 +55,7 @@ test('painel: login, 2FA no primeiro acesso, confirmar e recusar pedidos', async
   page,
   browser,
 }, info) => {
+  test.setTimeout(120_000) // walks through every panel screen
   await page.emulateMedia({ reducedMotion: 'reduce' })
   const email = E2E_ADMINS[info.project.name as keyof typeof E2E_ADMINS]
   const base = info.project.name === 'desktop' ? 10 : 14
@@ -89,7 +90,10 @@ test('painel: login, 2FA no primeiro acesso, confirmar e recusar pedidos', async
     page.getByRole('list', { name: 'Códigos de recuperação' }).getByRole('listitem'),
   ).toHaveCount(10)
   await page.getByRole('link', { name: 'Já guardei, entrar no painel' }).click()
-  await expect(page).toHaveURL(/\/admin\/agendamentos$/)
+  await expect(page).toHaveURL(/\/admin$/)
+  await expect(page.locator('.adm-hello')).toContainText('Luísa')
+  expect((await axe(page)).violations).toEqual([])
+  await page.goto('/admin/agendamentos')
 
   const cookies = await page.context().cookies()
   const session = cookies.find((c) => c.name.endsWith('lsr_admin'))!
@@ -105,7 +109,9 @@ test('painel: login, 2FA no primeiro acesso, confirmar e recusar pedidos', async
   await expect(page.getByRole('heading', { level: 2, name: ana.name })).toBeVisible()
   expect((await axe(page)).violations).toEqual([])
   await page.getByRole('button', { name: 'Confirmar' }).click()
-  await expect(page.getByRole('main').getByRole('status')).toContainText('Agendamento confirmado')
+  await expect(page.getByRole('main').getByRole('status').filter({ hasText: /\S/ })).toContainText(
+    'Agendamento confirmado',
+  )
   await expect(page.locator('.adm-detail-head')).toContainText('Confirmado')
 
   // Decline Bia's request (with the confirmation dialog).
@@ -117,7 +123,9 @@ test('painel: login, 2FA no primeiro acesso, confirmar e recusar pedidos', async
   await page.getByRole('button', { name: 'Recusar' }).click()
   await expect(page.getByRole('dialog')).toBeVisible()
   await page.getByRole('button', { name: 'Sim, recusar' }).click()
-  await expect(page.getByRole('main').getByRole('status')).toContainText('Pedido recusado')
+  await expect(page.getByRole('main').getByRole('status').filter({ hasText: /\S/ })).toContainText(
+    'Pedido recusado',
+  )
   await expect(page.locator('.adm-detail-head')).toContainText('Cancelado')
 
   let mails: SavedEmail[] = []
@@ -130,7 +138,8 @@ test('painel: login, 2FA no primeiro acesso, confirmar e recusar pedidos', async
   expect(mails[0]!.text).toMatch(/\/a\/[A-Za-z0-9_-]{43}/)
 
   // Sign out, then back in with password + code.
-  await page.getByRole('button', { name: /Sair/ }).first().click()
+  await page.getByLabel(/^Conta de/).click()
+  await page.locator('.adm-account-menu').getByRole('button', { name: 'Sair', exact: true }).click()
   await expect(page).toHaveURL(/\/admin\/entrar$/)
   await page.goto('/admin/agendamentos')
   await expect(page).toHaveURL(/\/admin\/entrar/)
@@ -139,7 +148,74 @@ test('painel: login, 2FA no primeiro acesso, confirmar e recusar pedidos', async
   expect((await axe(page)).violations).toEqual([])
   await page.getByLabel('Código de 6 dígitos').fill(totp(secret, 1)) // next step: never a replay
   await page.getByRole('button', { name: 'Verificar e entrar' }).click()
-  await expect(page).toHaveURL(/\/admin\/agendamentos$/)
+  await expect(page).toHaveURL(/\/admin$/)
+
+  // Agenda: week, month and day views.
+  await page.goto('/admin/agenda')
+  await expect(page.locator('.adm-grid')).toBeVisible()
+  expect((await axe(page)).violations).toEqual([])
+  await page.getByRole('link', { name: 'Mês' }).click()
+  await expect(page.locator('.adm-month')).toBeVisible()
+  expect((await axe(page)).violations).toEqual([])
+
+  // A block over a free day, then removed.
+  await page.goto('/admin/agenda/bloqueios')
+  expect((await axe(page)).violations).toEqual([])
+  await page.getByLabel('De', { exact: true }).fill('2027-03-10')
+  await page.getByLabel('Motivo (só você vê)', { exact: true }).fill(`Folga ${info.project.name}`)
+  await page.getByRole('button', { name: 'Bloquear' }).click()
+  await expect(page.getByRole('main').getByRole('status').filter({ hasText: /\S/ })).toContainText(
+    'Bloqueio criado',
+  )
+  await page.getByRole('button', { name: `Remover bloqueio Folga ${info.project.name}` }).click()
+  await expect(page.getByText(`Folga ${info.project.name}`)).toHaveCount(0)
+
+  // Manual booking (phone-only client), then reschedule and cancel it.
+  await page.goto('/admin/agendamentos/novo')
+  expect((await axe(page)).violations).toEqual([])
+  await page.getByRole('combobox', { name: /^Serviço/ }).selectOption({ label: 'Maquiagem Social' })
+  await page
+    .getByLabel('Data', { exact: true })
+    .fill(info.project.name === 'desktop' ? '2027-03-11' : '2027-03-12')
+  await page.getByLabel('Início da maquiagem', { exact: true }).fill('21:00')
+  await page.getByLabel('Nome', { exact: true }).fill('Cliente do WhatsApp')
+  await page
+    .getByLabel('WhatsApp com DDD', { exact: true })
+    .fill(info.project.name === 'desktop' ? '11977770001' : '11977770002')
+  await page.getByLabel('CEP', { exact: true }).fill('01310-100')
+  await page.getByLabel('Número', { exact: true }).fill('10')
+  await page.getByRole('button', { name: 'Agendar' }).click()
+  await expect(page.getByRole('main').getByRole('status').filter({ hasText: /\S/ })).toContainText(
+    'Agendamento criado',
+  )
+  await page.getByRole('button', { name: 'Remarcar' }).click()
+  await page.getByLabel('Novo horário', { exact: true }).fill('20:00')
+  await page.getByRole('dialog').getByRole('button', { name: 'Remarcar' }).click()
+  await expect(page.getByRole('main').getByRole('status').filter({ hasText: /\S/ })).toContainText(
+    'remarcado',
+  )
+  await expect(page.locator('.adm-info')).toContainText('20:00')
+  await page.getByLabel('Anotações internas', { exact: true }).fill('Cliente indicada pela Ana')
+  await page.getByRole('button', { name: 'Salvar anotação' }).click()
+  await expect(page.getByText('Anotação salva.')).toBeVisible()
+  await page.getByRole('button', { name: 'Cancelar' }).click()
+  await page.getByRole('button', { name: 'Sim, cancelar' }).click()
+  await expect(page.locator('.adm-detail-head')).toContainText('Cancelado')
+
+  // Clients and settings.
+  await page.goto('/admin/clientes')
+  await expect(page.getByText('Cliente do WhatsApp').first()).toBeVisible()
+  expect((await axe(page)).violations).toEqual([])
+  await page.getByText('Cliente do WhatsApp').first().click()
+  await expect(page.getByRole('heading', { level: 2, name: 'Cliente do WhatsApp' })).toBeVisible()
+  expect((await axe(page)).violations).toEqual([])
+
+  await page.goto('/admin/ajustes')
+  expect((await axe(page)).violations).toEqual([])
+  await page.getByRole('button', { name: 'Salvar regras' }).click()
+  await expect(page.getByText('Regras salvas.')).toBeVisible()
+  await page.getByRole('button', { name: 'Salvar horários' }).click()
+  await expect(page.getByText('Horários salvos.')).toBeVisible()
 })
 
 test('painel: rotas do painel exigem sessão e não são indexadas', async ({ request }) => {

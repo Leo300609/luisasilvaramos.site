@@ -237,6 +237,7 @@ export async function createBlockAction(_prev: FormState, form: FormData): Promi
       error: `Há atendimento nesse período (${list}). Remarque ou cancele antes de bloquear.`,
     }
   }
+  revalidatePath('/admin/agenda/bloqueios')
   return { ok: 'Bloqueio criado.' }
 }
 

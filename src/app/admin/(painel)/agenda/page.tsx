@@ -238,9 +238,9 @@ export default async function AgendaPage({
       </p>
 
       {view === 'mes' ? (
-        <div className="adm-month" role="grid" aria-label={formatMonth(date.slice(0, 7))}>
+        <div className="adm-month">
           {['seg', 'ter', 'qua', 'qui', 'sex', 'sáb', 'dom'].map((w) => (
-            <div key={w} className="adm-month-wd" role="columnheader">
+            <div key={w} className="adm-month-wd" aria-hidden="true">
               {w}
             </div>
           ))}
@@ -252,7 +252,6 @@ export default async function AgendaPage({
               <Link
                 key={d}
                 href={href('dia', d)}
-                role="gridcell"
                 className={`adm-month-day${outside ? 'is-outside' : ''}${d === today ? 'is-today' : ''}${blocked ? 'is-blocked' : ''}`}
                 aria-label={`${dayLabel(d)}: ${dayItems.length} atendimento(s)${blocked ? ', bloqueado' : ''}`}
               >

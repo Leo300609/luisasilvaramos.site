@@ -46,12 +46,8 @@
           "name": "admin_password_resets_user_id_admin_users_id_fk",
           "tableFrom": "admin_password_resets",
           "tableTo": "admin_users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -146,12 +142,8 @@
           "name": "admin_sessions_user_id_admin_users_id_fk",
           "tableFrom": "admin_sessions",
           "tableTo": "admin_users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -250,9 +242,7 @@
         "admin_users_email_unique": {
           "name": "admin_users_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         }
       },
       "policies": {},
@@ -352,12 +342,8 @@
           "name": "audit_log_actor_id_admin_users_id_fk",
           "tableFrom": "audit_log",
           "tableTo": "admin_users",
-          "columnsFrom": [
-            "actor_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["actor_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -608,12 +594,8 @@
           "name": "booking_events_booking_id_bookings_id_fk",
           "tableFrom": "booking_events",
           "tableTo": "bookings",
-          "columnsFrom": [
-            "booking_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["booking_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -695,12 +677,8 @@
           "name": "booking_tokens_booking_id_bookings_id_fk",
           "tableFrom": "booking_tokens",
           "tableTo": "bookings",
-          "columnsFrom": [
-            "booking_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["booking_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -710,9 +688,7 @@
         "booking_tokens_token_hash_unique": {
           "name": "booking_tokens_token_hash_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "token_hash"
-          ]
+          "columns": ["token_hash"]
         }
       },
       "policies": {},
@@ -1004,12 +980,8 @@
           "name": "bookings_customer_id_customers_id_fk",
           "tableFrom": "bookings",
           "tableTo": "customers",
-          "columnsFrom": [
-            "customer_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["customer_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1017,12 +989,8 @@
           "name": "bookings_service_id_services_id_fk",
           "tableFrom": "bookings",
           "tableTo": "services",
-          "columnsFrom": [
-            "service_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["service_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1032,16 +1000,12 @@
         "bookings_code_seq_unique": {
           "name": "bookings_code_seq_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "code_seq"
-          ]
+          "columns": ["code_seq"]
         },
         "bookings_idempotency_key_unique": {
           "name": "bookings_idempotency_key_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "idempotency_key"
-          ]
+          "columns": ["idempotency_key"]
         }
       },
       "policies": {},
@@ -1369,12 +1333,8 @@
           "name": "email_outbox_booking_id_bookings_id_fk",
           "tableFrom": "email_outbox",
           "tableTo": "bookings",
-          "columnsFrom": [
-            "booking_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["booking_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1382,12 +1342,8 @@
           "name": "email_outbox_customer_id_customers_id_fk",
           "tableFrom": "email_outbox",
           "tableTo": "customers",
-          "columnsFrom": [
-            "customer_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["customer_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -1395,12 +1351,8 @@
           "name": "email_outbox_admin_user_id_admin_users_id_fk",
           "tableFrom": "email_outbox",
           "tableTo": "admin_users",
-          "columnsFrom": [
-            "admin_user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["admin_user_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -1410,9 +1362,7 @@
         "email_outbox_dedupe_key_unique": {
           "name": "email_outbox_dedupe_key_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "dedupe_key"
-          ]
+          "columns": ["dedupe_key"]
         }
       },
       "policies": {},
@@ -1540,10 +1490,7 @@
       "compositePrimaryKeys": {
         "rate_limits_key_window_start_pk": {
           "name": "rate_limits_key_window_start_pk",
-          "columns": [
-            "key",
-            "window_start"
-          ]
+          "columns": ["key", "window_start"]
         }
       },
       "uniqueConstraints": {},
@@ -1842,9 +1789,7 @@
         "services_slug_unique": {
           "name": "services_slug_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "slug"
-          ]
+          "columns": ["slug"]
         }
       },
       "policies": {},
@@ -1865,20 +1810,12 @@
     "public.booking_source": {
       "name": "booking_source",
       "schema": "public",
-      "values": [
-        "site",
-        "admin"
-      ]
+      "values": ["site", "admin"]
     },
     "public.booking_status": {
       "name": "booking_status",
       "schema": "public",
-      "values": [
-        "pendente",
-        "confirmado",
-        "concluido",
-        "cancelado"
-      ]
+      "values": ["pendente", "confirmado", "concluido", "cancelado"]
     },
     "public.cancel_reason": {
       "name": "cancel_reason",
@@ -1895,50 +1832,27 @@
     "public.email_status": {
       "name": "email_status",
       "schema": "public",
-      "values": [
-        "pendente",
-        "enviado",
-        "falhou",
-        "descartado"
-      ]
+      "values": ["pendente", "enviado", "falhou", "descartado"]
     },
     "public.event_duration": {
       "name": "event_duration",
       "schema": "public",
-      "values": [
-        "ate_2h",
-        "2_3h",
-        "3_4h",
-        "4_6h",
-        "mais_6h",
-        "dia_inteiro"
-      ]
+      "values": ["ate_2h", "2_3h", "3_4h", "4_6h", "mais_6h", "dia_inteiro"]
     },
     "public.payment_method": {
       "name": "payment_method",
       "schema": "public",
-      "values": [
-        "pix",
-        "cartao",
-        "dinheiro"
-      ]
+      "values": ["pix", "cartao", "dinheiro"]
     },
     "public.payment_status": {
       "name": "payment_status",
       "schema": "public",
-      "values": [
-        "pendente",
-        "sinal_pago",
-        "pago"
-      ]
+      "values": ["pendente", "sinal_pago", "pago"]
     },
     "public.slot_mode": {
       "name": "slot_mode",
       "schema": "public",
-      "values": [
-        "grid",
-        "auto"
-      ]
+      "values": ["grid", "auto"]
     }
   },
   "schemas": {},

@@ -7,8 +7,8 @@
 Todos ficam em `src/content/site.ts` (e, a partir da Fase 5, no painel):
 
 - [ ] **(conteúdo)** Número real de clientes atendidas (hero: "+ de [X]")
-- [ ] **(conteúdo)** Cidade/região de atendimento (hero, contato, rodapé)
-- [ ] **(conteúdo)** Texto da trajetória da Luísa (seção Sobre)
+- [x] **(conteúdo)** Cidade/região de atendimento: Suzano / Alto Tietê
+- [ ] **(conteúdo)** Texto da trajetória da Luísa (seção Sobre; o parágrafo provisório foi retirado)
 - [ ] **(conteúdo)** 9 fotos do portfólio, com **autorização de uso de imagem** de cada cliente
 - [ ] **(conteúdo)** 3 depoimentos reais, com autorização (nome e mês/ano)
 - [ ] **(conteúdo)** Instagram (os links aparecem sozinhos quando o @ for preenchido)
