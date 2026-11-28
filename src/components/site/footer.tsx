@@ -5,11 +5,11 @@ import { Instagram, Mail, WhatsApp } from './icons'
 import { LacMonogram, LsrMonogram } from './monograms'
 
 const NAV = [
-  { href: '#sobre', label: 'Sobre' },
-  { href: '#servicos', label: 'Serviços' },
-  { href: '#portfolio', label: 'Portfólio' },
-  { href: '#depoimentos', label: 'Depoimentos' },
-  { href: '#contato', label: 'Contato' },
+  { href: '/#sobre', label: 'Sobre' },
+  { href: '/#servicos', label: 'Serviços' },
+  { href: '/#portfolio', label: 'Portfólio' },
+  { href: '/#depoimentos', label: 'Depoimentos' },
+  { href: '/#contato', label: 'Contato' },
 ] as const
 
 export function SiteFooter() {
@@ -77,7 +77,10 @@ export function SiteFooter() {
         </div>
 
         <div className="lsr-footer-bottom">
-          <p>© {year} Luísa Silva Ramos. Todos os direitos reservados.</p>
+          <p className="lsr-footer-legal">
+            © {year} Luísa Silva Ramos. Todos os direitos reservados. ·{' '}
+            <a href="/privacidade">Política de privacidade</a>
+          </p>
           {/* TODO(Leo): link da assinatura, quando houver um site do desenvolvedor. */}
           <p className="lsr-signature-dev">
             <span>Desenvolvido por</span>

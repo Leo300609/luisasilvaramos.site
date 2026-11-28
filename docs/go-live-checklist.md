@@ -18,7 +18,7 @@ Todos ficam em `src/content/site.ts` (e, a partir da Fase 5, no painel):
 ## Legal e LGPD
 
 - [ ] Identificação da fornecedora no site (Decreto 7.962/2013): MEI/CNPJ e endereço. Ver risco R6.1
-- [ ] Política de privacidade, termos de uso e política de cancelamento revisados por advogado
+- [ ] Política de privacidade (`/privacidade`, texto feito a partir do que o sistema faz), termos de uso e política de cancelamento revisados por advogado
 - [ ] Modelo do contrato revisado por advogado
 
 ## Infraestrutura

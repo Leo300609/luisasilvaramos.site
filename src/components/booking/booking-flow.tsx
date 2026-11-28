@@ -952,7 +952,11 @@ export function BookingFlow({
                   />
                   <span>
                     Li e aceito a política de cancelamento: cancelamentos e remarcações pelo site
-                    até 48 horas antes do horário da maquiagem.
+                    até 48 horas antes do horário da maquiagem. Seus dados são tratados conforme a{' '}
+                    <a href="/privacidade" target="_blank" rel="noopener">
+                      política de privacidade
+                    </a>
+                    .
                   </span>
                 </label>
               </div>

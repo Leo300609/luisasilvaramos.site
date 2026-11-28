@@ -8,5 +8,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
   return [
     { url: new URL('/', base).toString(), changeFrequency: 'monthly', priority: 1 },
     { url: new URL('/agendar', base).toString(), changeFrequency: 'monthly', priority: 0.8 },
+    { url: new URL('/privacidade', base).toString(), changeFrequency: 'yearly', priority: 0.3 },
   ]
 }

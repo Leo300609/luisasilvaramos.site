@@ -6,11 +6,11 @@ import { useEffect, useRef, useState } from 'react'
 import { LsrMonogram } from './monograms'
 
 const NAV = [
-  { href: '#sobre', label: 'Sobre' },
-  { href: '#servicos', label: 'Serviços' },
-  { href: '#portfolio', label: 'Portfólio' },
-  { href: '#depoimentos', label: 'Depoimentos' },
-  { href: '#contato', label: 'Contato' },
+  { href: '/#sobre', label: 'Sobre' },
+  { href: '/#servicos', label: 'Serviços' },
+  { href: '/#portfolio', label: 'Portfólio' },
+  { href: '/#depoimentos', label: 'Depoimentos' },
+  { href: '/#contato', label: 'Contato' },
 ] as const
 
 /**
@@ -58,7 +58,7 @@ export function SiteHeader() {
   return (
     <header className={headerClass}>
       <div className="lsr-header-bar">
-        <a href="#inicio" className="lsr-brand">
+        <Link href="/#inicio" className="lsr-brand">
           <LsrMonogram size={52} />
           <span className="lsr-brand-name">
             <span>Luísa Ramos</span>
@@ -66,7 +66,7 @@ export function SiteHeader() {
               Make-up artist<span className="sr-only">, voltar ao início</span>
             </span>
           </span>
-        </a>
+        </Link>
 
         <nav className="lsr-nav-desktop" aria-label="Menu principal">
           {NAV.map((item) => (
