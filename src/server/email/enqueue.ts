@@ -7,9 +7,12 @@ export const EMAIL_KINDS = [
   'booking_cancelled',
   'booking_rescheduled',
   'access_link',
+  'booking_confirmed',
+  'booking_declined',
+  'admin_password_reset',
 ] as const
 export type EmailKind = (typeof EMAIL_KINDS)[number]
-export type Recipient = 'cliente' | 'luisa'
+export type Recipient = 'cliente' | 'luisa' | 'admin'
 
 type Tx = Pick<Db, 'insert'>
 
@@ -21,6 +24,7 @@ export async function enqueueEmail(
     dedupeKey: string
     bookingId?: string
     customerId?: string
+    adminUserId?: string
     data?: Record<string, string | number | boolean | null>
     notBefore?: Date
     /** Defaults to the database clock. */
@@ -35,6 +39,7 @@ export async function enqueueEmail(
       dedupeKey: email.dedupeKey,
       bookingId: email.bookingId ?? null,
       customerId: email.customerId ?? null,
+      adminUserId: email.adminUserId ?? null,
       data: email.data ?? {},
       ...(email.notBefore ? { nextAttemptAt: email.notBefore } : {}),
       ...(email.createdAt ? { createdAt: email.createdAt } : {}),

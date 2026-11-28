@@ -29,6 +29,20 @@
       "when": 1795805618539,
       "tag": "0003_email_outbox",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1795828568108,
+      "tag": "0004_admin_auth",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1795828568914,
+      "tag": "0005_audit_append_only",
+      "breakpoints": true
     }
   ]
 }

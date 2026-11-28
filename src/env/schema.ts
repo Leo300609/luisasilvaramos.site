@@ -49,6 +49,11 @@ export const serverEnvSchema = z
       .optional(),
     /** HMAC secret that signs travel quotes (≥ 32 chars). Generate: openssl rand -base64 48 */
     BOOKING_SIGNING_SECRET: z.string().min(32).optional(),
+    /**
+     * Admin panel (Phase 5): HMAC key for hashed IPs and login-attempt keys. ≥ 32 chars.
+     * Generate: openssl rand -base64 48
+     */
+    AUTH_SECRET: z.string().min(32).optional(),
     /** Resend API key (Phase 4b). Without it, e-mails wait in the outbox. */
     RESEND_API_KEY: z
       .string()

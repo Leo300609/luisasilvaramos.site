@@ -53,6 +53,21 @@ Environment variables_. Depois de mudar, faça um novo deploy (variáveis só va
 - **Restauração:** o Neon Free guarda 6 h de histórico (restore instantâneo pelo console). O dump
   diário cifrado entra na Fase 6.
 
+## Painel (contas de administração)
+
+- **Criar a conta da Luísa** (uma vez, apontando para o banco de produção):
+  `DATABASE_URL="<url>" npm run admin -- criar --email <e-mail> --nome "Luísa Silva Ramos"`.
+  A senha é digitada sem aparecer na tela. No primeiro login em `/admin`, ela escaneia o QR code
+  com um app autenticador e guarda os 10 códigos de recuperação.
+- **Perdeu o celular e os códigos:** `npm run admin -- resetar-2fa --email <e-mail>`. A conta é
+  desconectada de todos os dispositivos e o QR aparece de novo no próximo login.
+- **Desligar uma conta:** `npm run admin -- desativar --email <e-mail>`.
+- **Sair de todos os dispositivos:** menu da conta (canto superior direito) no painel.
+- **Auditoria:** `select created_at, action, target_type, target_id from audit_log order by id desc limit 50;`.
+  A tabela não aceita UPDATE nem DELETE.
+- **Bloqueio por tentativas:** depois de 5 senhas erradas, a conta espera 5 minutos. Não há como
+  liberar antes, de propósito.
+
 ## E-mails
 
 - **Ver a fila:** `select kind, recipient, status, attempts, last_error, created_at from email_outbox order by created_at desc limit 20;`

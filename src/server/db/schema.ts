@@ -287,6 +287,92 @@ export const bookingEvents = pgTable(
   (t) => [index('booking_events_booking_idx').on(t.bookingId, t.createdAt)],
 )
 
+// ── Admin panel (Phase 5, docs/adr/0005-auth-admin.md) ──────────────────────
+
+export const adminUsers = pgTable(
+  'admin_users',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    email: text('email').notNull().unique(),
+    name: text('name').notNull(),
+    /** scrypt, self-describing format (src/server/auth/password.ts). */
+    passwordHash: text('password_hash').notNull(),
+    /** TOTP secret, encrypted. Null until the 2FA setup is finished. */
+    totpSecretEnc: text('totp_secret_enc'),
+    totpEnabledAt: timestamp('totp_enabled_at', { withTimezone: true }),
+    /** Last accepted TOTP time step: a code is never accepted twice. */
+    totpLastStep: bigint('totp_last_step', { mode: 'number' }),
+    /** SHA-256 of the unused recovery codes. */
+    recoveryCodeHashes: text('recovery_code_hashes')
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
+    passwordChangedAt: timestamp('password_changed_at', { withTimezone: true }),
+    disabledAt: timestamp('disabled_at', { withTimezone: true }),
+    ...timestamps,
+  },
+  (t) => [check('admin_users_email_lower_ck', sql`${t.email} = lower(${t.email})`)],
+)
+
+/** Server-side sessions: revocable, the id is the SHA-256 of the cookie token. */
+export const adminSessions = pgTable(
+  'admin_sessions',
+  {
+    id: text('id').primaryKey(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => adminUsers.id),
+    /** Null while the second factor is pending. */
+    mfaVerifiedAt: timestamp('mfa_verified_at', { withTimezone: true }),
+    remember: boolean('remember').notNull().default(false),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    lastSeenAt: timestamp('last_seen_at', { withTimezone: true }).notNull().defaultNow(),
+    userAgent: text('user_agent'),
+    revokedAt: timestamp('revoked_at', { withTimezone: true }),
+    createdAt: timestamps.createdAt,
+  },
+  (t) => [index('admin_sessions_user_idx').on(t.userId)],
+)
+
+/** Failed (and successful) authentication attempts, for lockouts. Keys are hashed. */
+export const authAttempts = pgTable(
+  'auth_attempts',
+  {
+    id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
+    key: text('key').notNull(),
+    success: boolean('success').notNull(),
+    createdAt: timestamps.createdAt,
+  },
+  (t) => [index('auth_attempts_key_idx').on(t.key, t.createdAt)],
+)
+
+export const adminPasswordResets = pgTable('admin_password_resets', {
+  tokenHash: text('token_hash').primaryKey(),
+  userId: uuid('user_id')
+    .notNull()
+    .references(() => adminUsers.id),
+  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+  usedAt: timestamp('used_at', { withTimezone: true }),
+  createdAt: timestamps.createdAt,
+})
+
+/** Who did what in the panel (ASVS V7). Append-only, no personal data in `data`. */
+export const auditLog = pgTable(
+  'audit_log',
+  {
+    id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
+    actorId: uuid('actor_id').references(() => adminUsers.id),
+    action: text('action').notNull(),
+    targetType: text('target_type'),
+    targetId: text('target_id'),
+    /** HMAC of the client IP (AUTH_SECRET): correlates without storing the address. */
+    ipHash: text('ip_hash'),
+    data: jsonb('data').notNull().default({}),
+    createdAt: timestamps.createdAt,
+  },
+  (t) => [index('audit_log_created_idx').on(t.createdAt)],
+)
+
 export const emailStatus = pgEnum('email_status', ['pendente', 'enviado', 'falhou', 'descartado'])
 
 /**
@@ -301,10 +387,11 @@ export const emailOutbox = pgTable(
   {
     id: uuid('id').primaryKey().defaultRandom(),
     kind: text('kind').notNull(),
-    /** 'cliente' (booking's customer) or 'luisa' (EMAIL_ADMIN_NOTIFY). */
+    /** 'cliente' (booking's customer), 'luisa' (EMAIL_ADMIN_NOTIFY) or 'admin' (an admin user). */
     recipient: text('recipient').notNull(),
     bookingId: uuid('booking_id').references(() => bookings.id),
     customerId: uuid('customer_id').references(() => customers.id),
+    adminUserId: uuid('admin_user_id').references(() => adminUsers.id),
     /** Non-personal details needed to render (e.g. previous date of a reschedule). */
     data: jsonb('data').notNull().default({}),
     /** Prevents duplicates when the same change is replayed. */
@@ -334,3 +421,4 @@ export type ScheduleSettingsRow = typeof scheduleSettings.$inferSelect
 export type BusinessHoursRow = typeof businessHours.$inferSelect
 export type Block = typeof blocks.$inferSelect
 export type EmailOutboxRow = typeof emailOutbox.$inferSelect
+export type AdminUser = typeof adminUsers.$inferSelect

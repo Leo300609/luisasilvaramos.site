@@ -191,6 +191,57 @@ export function clientAccessLink(ctx: {
   })
 }
 
+export function clientBookingDeclined(
+  b: BookingSummary,
+  ctx: { customer: CustomerInfo; bookUrl: string; whatsappUrl: string },
+): RenderedEmail {
+  return renderEmail({
+    subject: `Não foi possível confirmar · ${formatDateShort(b.date)}, ${b.time}`,
+    preheader: 'Infelizmente não consigo atender nesse horário.',
+    heading: 'Horário indisponível',
+    blocks: [
+      {
+        type: 'p',
+        text: `Olá, ${firstName(ctx.customer.name)}. Infelizmente não consigo atender no horário que você pediu, e o pedido foi cancelado. Nenhum valor é cobrado.`,
+      },
+      { type: 'details', rows: [codeRow(b), ...whenRows(b).slice(0, 3)] },
+      { type: 'p', text: 'Se quiser, escolha outra data:' },
+      { type: 'button', href: ctx.bookUrl, label: 'Escolher outra data' },
+      {
+        type: 'p',
+        text: `Ou fale comigo pelo WhatsApp para acharmos um horário: ${ctx.whatsappUrl}`,
+      },
+    ],
+  })
+}
+
+export function adminPasswordReset(ctx: {
+  name: string
+  link: string
+  validMinutes: number
+}): RenderedEmail {
+  return renderEmail({
+    subject: 'Redefinir a senha do painel',
+    preheader: `Link válido por ${ctx.validMinutes} minutos.`,
+    heading: 'Redefinir senha',
+    blocks: [
+      {
+        type: 'p',
+        text: `Olá, ${firstName(ctx.name)}. Recebemos um pedido para redefinir a senha do painel.`,
+      },
+      { type: 'button', href: ctx.link, label: 'Criar nova senha' },
+      {
+        type: 'note',
+        text: `O link vale por ${ctx.validMinutes} minutos e pode ser usado uma vez. O código do app autenticador continua sendo pedido no login.`,
+      },
+      {
+        type: 'p',
+        text: 'Se não foi você, ignore este e-mail: a senha atual continua valendo. Se isso se repetir, avise o responsável técnico.',
+      },
+    ],
+  })
+}
+
 // ── Luísa ────────────────────────────────────────────────────────────────────
 
 function customerRows(c: CustomerInfo): Array<[string, string]> {

@@ -74,3 +74,13 @@ export function emailDeliveryDeps(now: Date): DeliveryDeps {
     now,
   }
 }
+
+/** True when the admin panel can run (database, encryption and AUTH_SECRET). */
+export function adminConfigured(): boolean {
+  return Boolean(env.DATABASE_URL && env.ENC_KEYS && env.ENC_ACTIVE_KEY && env.AUTH_SECRET)
+}
+
+export function getAuthSecret(): string {
+  if (!env.AUTH_SECRET) throw new Error('AUTH_SECRET is not configured.')
+  return env.AUTH_SECRET
+}

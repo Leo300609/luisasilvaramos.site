@@ -41,12 +41,16 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       {
-        source: '/((?!a/).*)',
+        source: '/((?!a/|admin/r/).*)',
         headers: baseSecurityHeaders({ isDev }),
       },
       {
-        // Token links must never leak through the Referer header.
+        // Token links (client "Minha agenda", admin password reset) must never leak through Referer.
         source: '/a/:path*',
+        headers: baseSecurityHeaders({ isDev, referrerPolicy: 'no-referrer' }),
+      },
+      {
+        source: '/admin/r/:path*',
         headers: baseSecurityHeaders({ isDev, referrerPolicy: 'no-referrer' }),
       },
       {

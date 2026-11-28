@@ -95,6 +95,7 @@ jobs:
       - run: |
           echo "ENC_KEYS=v1:$(openssl rand -base64 32)" >> "$GITHUB_ENV"
           echo "BOOKING_SIGNING_SECRET=$(openssl rand -base64 48 | tr -d '\n')" >> "$GITHUB_ENV"
+          echo "AUTH_SECRET=$(openssl rand -base64 48 | tr -d '\n')" >> "$GITHUB_ENV"
       - run: npm run db:migrate && npm run db:seed
       - run: npm run db:set-base -- --lat -23.5503 --lng -46.6339
       - run: npm run build

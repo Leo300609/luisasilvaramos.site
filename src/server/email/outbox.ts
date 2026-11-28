@@ -21,6 +21,7 @@ import { formatDateLong } from '@/lib/format'
 import type { RenderedEmail } from './layout'
 import { MailerError, type Mailer } from './mailer'
 import * as t from './templates'
+import { issuePasswordResetToken, POLICY } from '../auth/service'
 
 export { enqueueEmail, EMAIL_KINDS, type EmailKind, type Recipient } from './enqueue'
 
@@ -87,6 +88,29 @@ async function compose(
   row: Row,
   deps: DeliveryDeps,
 ): Promise<{ to: string; email: RenderedEmail }> {
+  if (row.recipient === 'admin') {
+    if (row.kind !== 'admin_password_reset' || !row.adminUserId)
+      throw new Discard('bad-admin-email')
+    const [user] = await db
+      .select({
+        email: schema.adminUsers.email,
+        name: schema.adminUsers.name,
+        disabled: schema.adminUsers.disabledAt,
+      })
+      .from(schema.adminUsers)
+      .where(eq(schema.adminUsers.id, row.adminUserId))
+    if (!user || user.disabled) throw new Discard('admin-gone')
+    const token = await issuePasswordResetToken(db, row.adminUserId, deps.now)
+    return {
+      to: user.email,
+      email: t.adminPasswordReset({
+        name: user.name,
+        link: new URL(`/admin/r/${token}`, deps.siteUrl).toString(),
+        validMinutes: POLICY.resetTokenMin,
+      }),
+    }
+  }
+
   const to = row.recipient === 'luisa' ? deps.adminEmail : null
   if (row.recipient === 'luisa' && !to) throw new Discard('no-admin-address')
 
@@ -148,6 +172,19 @@ async function compose(
         }
       case 'booking_cancelled':
         return { to: email, email: t.clientBookingCancelled(b, { customer, bookUrl, whatsappUrl }) }
+      case 'booking_confirmed':
+        if (view.status !== 'confirmado') throw new Discard('not-confirmed')
+        return {
+          to: email,
+          email: t.clientBookingCreated(b, {
+            customer,
+            link: await accessLink(db, deps, view),
+            whatsappUrl,
+            pendingExpiryHours: 0,
+          }),
+        }
+      case 'booking_declined':
+        return { to: email, email: t.clientBookingDeclined(b, { customer, bookUrl, whatsappUrl }) }
       case 'booking_rescheduled':
         if (!['pendente', 'confirmado'].includes(view.status)) throw new Discard('not-active')
         return {

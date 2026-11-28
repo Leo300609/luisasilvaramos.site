@@ -31,4 +31,6 @@ Todos ficam em `src/content/site.ts` (e, a partir da Fase 5, no painel):
 - [ ] Monitor de uptime externo e alertas
 - [ ] Backup restaurado com sucesso pelo menos uma vez
 - [ ] Contas (GitHub, Netlify, Neon, Resend) com 2FA
+- [ ] `AUTH_SECRET` cadastrado na Netlify (produção) e conta do painel criada para a Luísa (`npm run admin -- criar`), com 2FA ativo e códigos de recuperação guardados
+- [ ] Conta de emergência do Leo (P28) criada e testada
 - [ ] Teste real de ponta a ponta (agendamento, e-mail, painel)
