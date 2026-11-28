@@ -1,6 +1,6 @@
 # Configurar a produção (passo a passo)
 
-Site oficial na Netlify: **effortless-meringue-dd2411**. O site antigo (`luisasilvaramos-site`) deve
+Site oficial na Netlify: **luisasilvaramos**. O site antigo (`luisasilvaramos-site`) deve
 ter os builds parados (ou ser apagado) para não gastar créditos à toa.
 
 Siga na ordem. Nenhum segredo vai para o GitHub nem para o chat: todos ficam só na Netlify e no seu
@@ -21,7 +21,7 @@ project_.
 
 ## 3. Variáveis na Netlify (só produção)
 
-Netlify → `effortless-meringue-dd2411` → _Project configuration → Environment variables_ → **Add a
+Netlify → `luisasilvaramos` → _Project configuration → Environment variables_ → **Add a
 variable**, com o escopo **Production**. Para gerar cada segredo, rode no seu computador (um por vez):
 
 ```bash
