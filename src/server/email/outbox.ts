@@ -158,6 +158,8 @@ async function compose(
 
   if (row.recipient === 'cliente') {
     const email = customer.email
+    // Bookings made in the panel may have no e-mail (phone-only clients).
+    if (!email) throw new Discard('no-client-email')
     switch (row.kind) {
       case 'booking_created':
         if (!['pendente', 'confirmado'].includes(view.status)) throw new Discard('not-active')

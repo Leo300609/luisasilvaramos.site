@@ -11,6 +11,7 @@ import { getDb } from '@/server/db/client'
 import { getKeyRing } from '@/server/runtime'
 
 import { BookingActions } from './booking-actions'
+import { ManageActions, NotesForm } from './manage-actions'
 
 export const metadata: Metadata = { title: 'Agendamento' }
 
@@ -20,6 +21,11 @@ const EVENT_LABEL: Record<string, string> = {
   declined: 'Recusado no painel',
   cancelled: 'Cancelado pela cliente',
   rescheduled: 'Remarcado pela cliente',
+  created_by_admin: 'Agendado no painel',
+  rescheduled_by_admin: 'Remarcado no painel',
+  cancelled_by_admin: 'Cancelado no painel',
+  completed: 'Concluído',
+  no_show: 'Cliente não compareceu',
 }
 
 const CANCEL_LABEL: Record<string, string> = {
@@ -74,6 +80,21 @@ export default async function BookingDetailPage({
           <strong>Agendamento confirmado.</strong> A cliente recebe a confirmação por e-mail.
         </div>
       )}
+      {feito && ['remarcado', 'cancelado', 'concluido', 'falta', 'criado'].includes(feito) && (
+        <div role="status" className="adm-alert adm-alert-ok">
+          <strong>
+            {
+              {
+                remarcado: 'Agendamento remarcado.',
+                cancelado: 'Agendamento cancelado. O horário foi liberado.',
+                concluido: 'Atendimento concluído.',
+                falta: 'Registrado: a cliente não compareceu.',
+                criado: 'Agendamento criado e confirmado.',
+              }[feito]
+            }
+          </strong>
+        </div>
+      )}
       {feito === 'recusado' && (
         <div role="status" className="adm-alert adm-alert-warn">
           <strong>Pedido recusado.</strong> O horário foi liberado e a cliente foi avisada por
@@ -107,9 +128,11 @@ export default async function BookingDetailPage({
             <a className="adm-btn adm-btn-dark" href={wa} target="_blank" rel="noopener noreferrer">
               WhatsApp · {phoneDisplay}
             </a>
-            <a className="adm-btn adm-btn-line" href={`mailto:${b.email}`}>
-              E-mail
-            </a>
+            {b.email && (
+              <a className="adm-btn adm-btn-line" href={`mailto:${b.email}`}>
+                E-mail
+              </a>
+            )}
           </div>
 
           <dl className="adm-info">
@@ -190,6 +213,8 @@ export default async function BookingDetailPage({
               <p className="adm-note is-health">{b.allergyNotes}</p>
             </section>
           )}
+
+          <NotesForm bookingId={b.id} initial={b.internalNotes} />
 
           <section className="adm-block" aria-labelledby="dt-hist">
             <h3 id="dt-hist" className="adm-label">

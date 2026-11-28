@@ -31,6 +31,7 @@ export type AdminBookingRow = {
   eventDuration: string | null
   totalCents: number
   expiresAt: string | null
+  startsAt: string
 }
 
 export const PAGE_SIZE = 20
@@ -99,6 +100,7 @@ export async function listBookings(
         eventDuration: b.eventDuration,
         totalCents: b.priceCents + b.travelFeeCents,
         expiresAt: b.expiresAt?.toISOString() ?? null,
+        startsAt: b.startsAt.toISOString(),
       }
     }),
   }
@@ -125,6 +127,7 @@ export type AdminBookingDetail = AdminBookingRow & {
   complement: string | null
   lookNotes: string | null
   allergyNotes: string | null
+  internalNotes: string
   cancelReason: string | null
   source: string
   createdAt: string
@@ -176,9 +179,11 @@ export async function getAdminBooking(
     complement: dec(b.complementEnc, 'complement'),
     lookNotes: dec(b.lookNotesEnc, 'look_notes'),
     allergyNotes: dec(b.allergyNotesEnc, 'allergy_notes'),
+    internalNotes: dec(b.internalNotesEnc, 'internal_notes') ?? '',
     cancelReason: b.cancelReason,
     source: b.source,
     expiresAt: b.expiresAt?.toISOString() ?? null,
+    startsAt: b.startsAt.toISOString(),
     createdAt: b.createdAt.toISOString(),
     events: events.map((e) => ({ type: e.type, actor: e.actor, at: e.createdAt.toISOString() })),
   }
