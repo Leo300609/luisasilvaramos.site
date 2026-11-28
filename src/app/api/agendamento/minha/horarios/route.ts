@@ -1,10 +1,11 @@
+import { LIMITS } from '@/server/http/rate-limit'
 import { z } from 'zod'
 
 import { slotsForReschedule } from '@/server/booking/manage'
 import { getDb } from '@/server/db/client'
 import { bookingFromCookie } from '@/server/http/booking-cookie'
 import { badRequest, forbidden, isSameOrigin, json, unavailable } from '@/server/http/guards'
-import { bookingConfigured } from '@/server/runtime'
+import { bookingConfigured, limitRequest } from '@/server/runtime'
 
 const body = z.object({ date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/) })
 
@@ -12,6 +13,8 @@ const body = z.object({ date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/) })
 export async function POST(request: Request) {
   if (!isSameOrigin(request)) return forbidden()
   if (!bookingConfigured()) return unavailable()
+  const limited = await limitRequest(request, LIMITS.slots)
+  if (limited) return limited
   const parsed = body.safeParse(await request.json().catch(() => null))
   if (!parsed.success) return badRequest()
   const db = getDb()

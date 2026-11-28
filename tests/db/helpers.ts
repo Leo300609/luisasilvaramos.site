@@ -24,7 +24,7 @@ export type TestDb = ReturnType<typeof openDb>
 
 export async function resetData(db: TestDb) {
   await db.execute(
-    sql`truncate job_runs, audit_log, auth_attempts, admin_password_resets, admin_sessions, email_outbox, admin_users, booking_tokens, booking_events, bookings, customers, blocks, services restart identity cascade`,
+    sql`truncate rate_limits, job_runs, audit_log, auth_attempts, admin_password_resets, admin_sessions, email_outbox, admin_users, booking_tokens, booking_events, bookings, customers, blocks, services restart identity cascade`,
   )
   await db.execute(sql`alter sequence booking_code_seq restart with 1`)
   await db.update(schema.scheduleSettings).set({

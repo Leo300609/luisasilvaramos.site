@@ -1,3 +1,4 @@
+import { LIMITS } from '@/server/http/rate-limit'
 import { and, eq } from 'drizzle-orm'
 import { z } from 'zod'
 
@@ -5,7 +6,7 @@ import { verifyQuote } from '@/server/booking/quote'
 import { getDb } from '@/server/db/client'
 import * as schema from '@/server/db/schema'
 import { badRequest, forbidden, isSameOrigin, json, unavailable } from '@/server/http/guards'
-import { bookingConfigured, getSigningSecret } from '@/server/runtime'
+import { bookingConfigured, getSigningSecret, limitRequest } from '@/server/runtime'
 import {
   findNextAvailableDays,
   getDaySlots,
@@ -35,6 +36,8 @@ const body = z.object({
 export async function POST(request: Request) {
   if (!isSameOrigin(request)) return forbidden()
   if (!bookingConfigured()) return unavailable()
+  const limited = await limitRequest(request, LIMITS.slots)
+  if (limited) return limited
   const parsed = body.safeParse(await request.json().catch(() => null))
   if (!parsed.success || (!parsed.data.month && !parsed.data.date)) return badRequest()
   const input = parsed.data

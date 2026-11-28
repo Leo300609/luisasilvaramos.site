@@ -1,3 +1,4 @@
+import { LIMITS } from '@/server/http/rate-limit'
 import { z } from 'zod'
 
 import { quoteForAddress } from '@/server/booking/quote'
@@ -9,6 +10,7 @@ import {
   getKeyRing,
   getRouteProvider,
   getSigningSecret,
+  limitRequest,
 } from '@/server/runtime'
 
 const body = z.object({
@@ -21,6 +23,8 @@ const body = z.object({
 export async function POST(request: Request) {
   if (!isSameOrigin(request)) return forbidden()
   if (!bookingConfigured()) return unavailable()
+  const limited = await limitRequest(request, LIMITS.quote)
+  if (limited) return limited
   const parsed = body.safeParse(await request.json().catch(() => null))
   if (!parsed.success) return badRequest()
 

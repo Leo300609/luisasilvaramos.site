@@ -17,6 +17,7 @@ import {
   pgEnum,
   pgSequence,
   pgTable,
+  primaryKey,
   smallint,
   text,
   time,
@@ -427,6 +428,17 @@ export const jobRuns = pgTable(
     report: jsonb('report').notNull().default({}),
   },
   (t) => [index('job_runs_job_idx').on(t.job, t.startedAt)],
+)
+
+/** Fixed-window request counters for the public API (Phase 4c). Keys are HMACs, never raw IPs. */
+export const rateLimits = pgTable(
+  'rate_limits',
+  {
+    key: text('key').notNull(),
+    windowStart: timestamp('window_start', { withTimezone: true }).notNull(),
+    count: integer('count').notNull().default(1),
+  },
+  (t) => [primaryKey({ columns: [t.key, t.windowStart] })],
 )
 
 export type Service = typeof services.$inferSelect
